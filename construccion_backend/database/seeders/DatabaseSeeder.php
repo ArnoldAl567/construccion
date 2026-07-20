@@ -42,6 +42,7 @@ class DatabaseSeeder extends Seeder
             $usuarios = [
                 [
                     'nombre' => 'Ing. Carlos Mendoza Salazar',
+                    'usuario' => 'carlos.mendoza',
                     'email' => 'carlos.mendoza@constructcontrol.pe',
                     'password' => Hash::make('Admin123*'),
                     'cargo' => 'Gerente de operaciones',
@@ -49,17 +50,19 @@ class DatabaseSeeder extends Seeder
                     'foto_url' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&auto=format',
                     'activo' => true,
                 ],
+                
                 [
-                    'nombre' => 'Ing. Ana Lucia Quispe Rojas',
-                    'email' => 'ana.quispe@constructcontrol.pe',
-                    'password' => Hash::make('Residente123*'),
-                    'cargo' => 'Ingeniera residente',
-                    'telefono' => '976542318',
-                    'foto_url' => 'https://images.unsplash.com/photo-1494790108755-2616b612b51c?w=80&h=80&fit=crop&auto=format',
+                    'nombre' => 'Rodrigo Alvarez',
+                    'usuario' => '40645091',
+                    'email' => null,
+                    'password' => Hash::make('597513'),
+                    'cargo' => 'Gerente de operaciones',
+                    'telefono' => '938672495',
                     'activo' => true,
                 ],
                 [
                     'nombre' => 'Ing. Roberto Huanca Flores',
+                    'usuario' => 'roberto.huanca',
                     'email' => 'roberto.huanca@constructcontrol.pe',
                     'password' => Hash::make('Residente123*'),
                     'cargo' => 'Ingeniero residente',
@@ -69,6 +72,7 @@ class DatabaseSeeder extends Seeder
                 ],
                 [
                     'nombre' => 'Mariela Torres Valdivia',
+                    'usuario' => 'mariela.torres',
                     'email' => 'mariela.torres@constructcontrol.pe',
                     'password' => Hash::make('Almacen123*'),
                     'cargo' => 'Jefa de almacen central',
@@ -103,13 +107,13 @@ class DatabaseSeeder extends Seeder
             }
 
             foreach ([
-                ['carlos.mendoza@constructcontrol.pe', $administradorId],
-                ['ana.quispe@constructcontrol.pe', $residenteId],
-                ['roberto.huanca@constructcontrol.pe', $residenteId],
-                ['mariela.torres@constructcontrol.pe', $almacenId],
-            ] as [$email, $rolId]) {
+                ['carlos.mendoza', $administradorId],
+                ['40645091', $administradorId],
+                ['roberto.huanca', $residenteId],
+                ['mariela.torres', $almacenId],
+            ] as [$usuario, $rolId]) {
                 DB::table('rol_usuario')->insertOrIgnore([
-                    'usuario_id' => DB::table('usuarios')->where('email', $email)->value('id'),
+                    'usuario_id' => DB::table('usuarios')->where('usuario', $usuario)->value('id'),
                     'rol_id' => $rolId,
                 ]);
             }

@@ -7,25 +7,154 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class DatosConstruccionController extends Controller
 {
+    private const SESSION_MINUTES = 60;
+    private const REMEMBER_SESSION_MINUTES = 480;
+
     public function login(Request $request): JsonResponse
     {
         $credenciales = $request->validate([
-            'correo' => ['required', 'string'],
+            'usuario' => ['required', 'string', 'max:160'],
             'contrasena' => ['required', 'string'],
+            'recordar' => ['sometimes', 'boolean'],
+        ]);
+
+        $identificador = Str::lower(trim($credenciales['usuario']));
+        $usuario = DB::table('usuarios')
+            ->where(function ($consulta) use ($identificador): void {
+                $consulta
+                    ->whereRaw('LOWER(usuario) = ?', [$identificador])
+                    ->orWhereRaw('LOWER(email) = ?', [$identificador]);
+            })
+            ->first();
+
+        if (! $usuario || ! $usuario->activo || ! Hash::check($credenciales['contrasena'], $usuario->password)) {
+            return $this->error('Usuario o contrasena incorrectos.', 401);
+        }
+
+        DB::table('sesiones_usuario')
+            ->where('usuario_id', $usuario->id)
+            ->where(function ($consulta): void {
+                $consulta->where('expires_at', '<=', now())->orWhereNotNull('revoked_at');
+            })
+            ->delete();
+
+        $recordar = (bool) ($credenciales['recordar'] ?? false);
+        $duracionMinutos = $recordar ? self::REMEMBER_SESSION_MINUTES : self::SESSION_MINUTES;
+        $expiraEn = now()->addMinutes($duracionMinutos);
+        $token = Str::random(80);
+        $rol = DB::table('roles')
+            ->join('rol_usuario', 'rol_usuario.rol_id', '=', 'roles.id')
+            ->where('rol_usuario.usuario_id', $usuario->id)
+            ->orderBy('roles.id')
+            ->value('roles.nombre') ?? 'Usuario';
+
+        DB::table('sesiones_usuario')->insert([
+            'usuario_id' => $usuario->id,
+            'token_hash' => hash('sha256', $token),
+            'ip_address' => $request->ip(),
+            'user_agent' => Str::limit((string) $request->userAgent(), 500, ''),
+            'expires_at' => $expiraEn,
+            'last_activity_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         return $this->ok([
-            'id' => 1,
-            'nombre' => 'Ing. Carlos Mendoza',
-            'email' => $credenciales['correo'],
-            'cargo' => 'Administrador',
-            'foto' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&auto=format',
+            'id' => $usuario->id,
+            'nombre' => $usuario->nombre,
+            'usuario' => $usuario->usuario,
+            'email' => $usuario->email,
+            'cargo' => $usuario->cargo,
+            'rol' => $rol,
+            'foto' => $usuario->foto_url,
+            'token' => $token,
+            'expiraEn' => $expiraEn->toIso8601String(),
+            'duracionMinutos' => $duracionMinutos,
         ], 'Sesion iniciada correctamente.');
+    }
+
+    public function registrarUsuario(Request $request): JsonResponse
+    {
+        $datos = $request->validate([
+            'nombre' => ['required', 'string', 'min:3', 'max:120'],
+            'usuario' => ['required', 'string', 'min:4', 'max:80', 'regex:/^[A-Za-z0-9._-]+$/'],
+            'correo' => ['nullable', 'email', 'max:160'],
+            'contrasena' => [
+                'required',
+                'string',
+                'confirmed',
+                Password::min(8)->mixedCase()->numbers()->symbols(),
+            ],
+        ]);
+
+        $nombreUsuario = Str::lower(trim($datos['usuario']));
+        $correo = filled($datos['correo'] ?? null) ? Str::lower(trim($datos['correo'])) : null;
+
+        if (DB::table('usuarios')->whereRaw('LOWER(usuario) = ?', [$nombreUsuario])->exists()) {
+            throw ValidationException::withMessages([
+                'usuario' => ['Este nombre de usuario ya se encuentra registrado.'],
+            ]);
+        }
+
+        if ($correo && DB::table('usuarios')->whereRaw('LOWER(email) = ?', [$correo])->exists()) {
+            throw ValidationException::withMessages([
+                'correo' => ['Ya existe una cuenta registrada con este correo.'],
+            ]);
+        }
+
+        DB::transaction(function () use ($datos, $nombreUsuario, $correo): void {
+            DB::table('roles')->insertOrIgnore([
+                'nombre' => 'Usuario',
+                'descripcion' => 'Acceso operativo estandar al sistema.',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $usuarioId = DB::table('usuarios')->insertGetId([
+                'nombre' => trim($datos['nombre']),
+                'usuario' => $nombreUsuario,
+                'email' => $correo,
+                'password' => Hash::make($datos['contrasena']),
+                'cargo' => 'Usuario del sistema',
+                'telefono' => null,
+                'foto_url' => null,
+                'activo' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $rolId = DB::table('roles')->where('nombre', 'Usuario')->value('id');
+            DB::table('rol_usuario')->insert([
+                'rol_id' => $rolId,
+                'usuario_id' => $usuarioId,
+            ]);
+        });
+
+        return $this->ok(null, 'Cuenta creada correctamente. Ya puedes iniciar sesion.', 201);
+    }
+
+    public function logout(Request $request): JsonResponse
+    {
+        $token = $request->bearerToken();
+        if ($token) {
+            DB::table('sesiones_usuario')
+                ->where('token_hash', hash('sha256', $token))
+                ->whereNull('revoked_at')
+                ->update([
+                    'revoked_at' => now(),
+                    'updated_at' => now(),
+                ]);
+        }
+
+        return $this->ok(null, 'Sesion cerrada correctamente.');
     }
 
     public function dashboard(): JsonResponse

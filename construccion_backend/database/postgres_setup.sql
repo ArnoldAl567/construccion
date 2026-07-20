@@ -1,0 +1,1 @@
+CREATE DATABASE construct_control WITH ENCODING = 'UTF8';

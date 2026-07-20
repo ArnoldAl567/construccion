@@ -1,0 +1,1302 @@
+  <main
+    class="app-frame"
+    [class.dark-mode]="temaOscuro()"
+    [class.sidebar-collapsed]="menuContraido()"
+    [class.mobile-sidebar-open]="menuMovilAbierto()"
+  >
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="logo-box sidebar-logo" [innerHTML]="iconoSvg('helmet')"></span>
+        <div>
+          <strong>ConstructControl</strong>
+          <small>Ing. Civil SAC</small>
+        </div>
+        <button
+          type="button"
+          class="collapse-button"
+          [attr.aria-label]="menuContraido() ? 'Expandir menu' : 'Contraer menu'"
+          (click)="menuContraido.set(!menuContraido())"
+        >
+          {{ menuContraido() ? '>' : '<' }}
+        </button>
+        <button
+          type="button"
+          class="mobile-sidebar-close"
+          aria-label="Cerrar menú"
+          (click)="menuMovilAbierto.set(false)"
+          [innerHTML]="iconoSvg('x')"
+        ></button>
+      </div>
+
+      <nav class="main-nav">
+        @for (item of menu; track item.vista) {
+          @if (item.vista === 'mantenedor') {
+            <button
+              type="button"
+              class="nav-parent"
+              [class.active]="vista() === 'trabajadores' || vista() === 'cargos' || vista() === 'clientes' || vista() === 'categorias-gasto' || vista() === 'tipos-ingreso'"
+              [class.expanded]="mantenedorMenuAbierto()"
+              [attr.title]="item.etiqueta"
+              (click)="mantenedorMenuAbierto.set(!mantenedorMenuAbierto())"
+            >
+              <span class="nav-icon" [innerHTML]="iconoSvg(item.icono)"></span>
+              <span class="nav-label">{{ item.etiqueta }}</span>
+              <span class="nav-caret">›</span>
+            </button>
+            @if (mantenedorMenuAbierto() || vista() === 'trabajadores' || vista() === 'cargos' || vista() === 'clientes' || vista() === 'categorias-gasto' || vista() === 'tipos-ingreso') {
+              <div class="nav-submenu">
+                <button type="button" [class.active]="vista() === 'trabajadores'" (click)="navegar('trabajadores')">
+                  <span class="nav-dot"></span>
+                  <span class="nav-label">Trabajadores</span>
+                </button>
+                <button type="button" [class.active]="vista() === 'cargos'" (click)="navegar('cargos')">
+                  <span class="nav-dot"></span>
+                  <span class="nav-label">Cargos</span>
+                </button>
+                <button type="button" [class.active]="vista() === 'clientes'" (click)="navegar('clientes')">
+                  <span class="nav-dot"></span>
+                  <span class="nav-label">Clientes</span>
+                </button>
+                <div class="nav-subgroup">
+                  <button
+                    type="button"
+                    class="nav-subgroup-trigger"
+                    [class.active]="vista() === 'categorias-gasto'"
+                    [class.expanded]="gastosMantenedorAbierto()"
+                    aria-label="Mostrar categorias de gastos"
+                    [attr.aria-expanded]="gastosMantenedorAbierto()"
+                    (click)="alternarGrupoMantenedor('gastos')"
+                  >
+                    <span class="nav-dot"></span>
+                    <span class="nav-label">Gastos</span>
+                    <span class="nav-caret">›</span>
+                  </button>
+                  @if (gastosMantenedorAbierto()) {
+                    <div class="nav-subchildren">
+                      <button type="button" [class.active]="vista() === 'categorias-gasto'" (click)="navegar('categorias-gasto')">
+                        <span class="nav-dot"></span>
+                        <span class="nav-label">Categorias</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+                <div class="nav-subgroup">
+                  <button
+                    type="button"
+                    class="nav-subgroup-trigger"
+                    [class.active]="vista() === 'tipos-ingreso'"
+                    [class.expanded]="ingresosMantenedorAbierto()"
+                    aria-label="Mostrar tipos de ingresos"
+                    [attr.aria-expanded]="ingresosMantenedorAbierto()"
+                    (click)="alternarGrupoMantenedor('ingresos')"
+                  >
+                    <span class="nav-dot"></span>
+                    <span class="nav-label">Ingresos</span>
+                    <span class="nav-caret">›</span>
+                  </button>
+                  @if (ingresosMantenedorAbierto()) {
+                    <div class="nav-subchildren">
+                      <button type="button" [class.active]="vista() === 'tipos-ingreso'" (click)="navegar('tipos-ingreso')">
+                        <span class="nav-dot"></span>
+                        <span class="nav-label">Tipos</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          } @else {
+            <button
+              type="button"
+              [class.active]="vista() === item.vista"
+              [attr.title]="item.etiqueta"
+              (click)="navegar(item.vista)"
+            >
+              <span class="nav-icon" [innerHTML]="iconoSvg(item.icono)"></span>
+              <span class="nav-label">{{ item.etiqueta }}</span>
+              @if (item.vista === 'obras') {
+                <b>4</b>
+              }
+              @if (item.vista === 'planillas') {
+                <b>2</b>
+              }
+            </button>
+          }
+        }
+      </nav>
+
+      <button type="button" class="sidebar-user sidebar-profile-footer" (click)="menuContraido.set(!menuContraido())">
+        <img [src]="usuarioSesion()?.foto || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&auto=format'" [alt]="usuarioSesion()?.nombre || 'Usuario'" />
+        <span>
+          <strong>{{ usuarioSesion()?.nombre || 'Usuario' }}</strong>
+          <small>{{ usuarioSesion()?.rol || 'Usuario' }}</small>
+        </span>
+      </button>
+    </aside>
+
+    <button
+      type="button"
+      class="mobile-sidebar-backdrop"
+      aria-label="Cerrar navegación"
+      (click)="menuMovilAbierto.set(false)"
+    ></button>
+
+    <section class="main-area">
+      <header class="topbar">
+        <button
+          type="button"
+          class="square mobile-menu-button"
+          aria-label="Abrir menú"
+          [attr.aria-expanded]="menuMovilAbierto()"
+          (click)="menuMovilAbierto.set(true)"
+          [innerHTML]="iconoSvg('menu')"
+        ></button>
+        <div class="breadcrumb"><span>Inicio</span><span>&gt;</span><strong>{{ etiquetaVista() }}</strong></div>
+        <div class="topbar-actions">
+          <span class="topbar-spacer"></span>
+          <button
+            type="button"
+            class="square theme-toggle"
+            [attr.aria-label]="temaOscuro() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+            (click)="alternarTema()"
+          >
+            <span class="theme-icon" [innerHTML]="iconoSvg(temaOscuro() ? 'sun' : 'moon')"></span>
+            <span class="visually-hidden">{{ temaOscuro() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro' }}</span>
+          </button>
+          <div class="user-menu">
+            <button
+              type="button"
+              class="user-chip"
+              aria-label="Abrir menu de usuario"
+              [attr.aria-expanded]="menuUsuarioAbierto()"
+              (click)="menuUsuarioAbierto.set(!menuUsuarioAbierto())"
+            >
+              <img [src]="usuarioSesion()?.foto || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&auto=format'" alt="Usuario" />
+              <small [class.open]="menuUsuarioAbierto()">v</small>
+            </button>
+            @if (menuUsuarioAbierto()) {
+              <div class="user-dropdown">
+                <div class="user-dropdown-header">
+                  <strong>{{ usuarioSesion()?.nombre || 'Ing. Carlos Mendoza' }}</strong>
+                  <span>{{ usuarioSesion()?.cargo || 'Administrador' }}</span>
+                </div>
+                <button type="button" class="logout-button" (click)="cerrarSesion()">
+                  <span [innerHTML]="iconoSvg('logout')"></span>
+                  Cerrar sesi&oacute;n
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </header>
+
+      @if (mensaje()) {
+        <div class="toast">{{ mensaje() }}</div>
+      }
+
+      <section class="page-content">
+        @if (vista() === 'dashboard') {
+          <section class="dashboard-titlebar build-dashboard-heading">
+            <div>
+              <h1>Dashboard ejecutivo</h1>
+              <p>{{ resumenDashboardPeriodo() }}</p>
+              <p>Resumen general · Noviembre 2024</p>
+            </div>
+            <select class="period-select"><option>Últimos 6 meses</option><option>Este año</option><option>Mes actual</option></select>
+          </section>
+
+          <section class="kpi-grid dashboard-kpis figma-dashboard-kpis">
+            @for (metrica of metricasDashboardActuales(); track metrica.etiqueta) {
+              <article class="kpi-card figma-kpi-card">
+                <span class="kpi-label">{{ metrica.etiqueta }}</span>
+                <span class="kpi-icon" [ngClass]="metrica.tono" [innerHTML]="iconoSvg(metrica.icono)"></span>
+                <strong>{{ metrica.valor }}</strong>
+                <p>{{ metrica.detalle }}</p>
+                @if (metrica.tendencia) {
+                  <small [class.red-text]="metrica.negativa" [class.green-text]="!metrica.negativa">
+                    {{ metrica.negativa ? '-' : '+' }} {{ metrica.tendencia }}
+                  </small>
+                }
+              </article>
+            }
+          </section>
+
+          <article class="panel build-alert-panel">
+            <header>
+              <h2>Alertas del sistema</h2>
+              <span class="new-pill">{{ alertasDashboardActuales().length }} alertas</span>
+            </header>
+            @for (alerta of alertasDashboardActuales(); track alerta.texto) {
+              <div class="alert-line" [ngClass]="alerta.tipo">
+                <span></span>
+                <div>
+                  <p>{{ alerta.texto }}</p>
+                  <small>{{ alerta.tiempo }}</small>
+                </div>
+              </div>
+            }
+          </article>
+
+          <section class="dashboard-secondary-row">
+            <article class="panel collection-progress dashboard-finance-summary">
+              <header>
+                <div>
+                  <h2>Resumen financiero</h2>
+                  <small>Los graficos detallados estan en Reportes</small>
+                </div>
+                <button type="button" class="text-button" (click)="navegar('reportes')">Ver reportes</button>
+              </header>
+              <div class="dashboard-progress-list">
+                <div>
+                  <span>Cobranza del presupuesto</span>
+                  <strong>{{ progresoFinancieroDashboard().cobranza }}%</strong>
+                  <div class="wide-progress"><span [style.width.%]="progresoFinancieroDashboard().cobranza"></span></div>
+                </div>
+                <div>
+                  <span>Ejecucion de gastos</span>
+                  <strong>{{ progresoFinancieroDashboard().ejecucion }}%</strong>
+                  <div class="wide-progress"><span [style.width.%]="progresoFinancieroDashboard().ejecucion"></span></div>
+                </div>
+                <div>
+                  <span>Margen actual</span>
+                  <strong [class.red-text]="progresoFinancieroDashboard().margen < 0" [class.green-text]="progresoFinancieroDashboard().margen >= 0">{{ progresoFinancieroDashboard().margen }}%</strong>
+                  <small>{{ formatoMoneda(progresoFinancieroDashboard().ganancia) }} de ganancia</small>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel dashboard-bar-panel profitability-panel">
+              <header><h2>Rentabilidad por obra</h2></header>
+              <div class="profitability-bars">
+                @for (obra of rentabilidadObrasReporte().slice(0, 5); track obra.nombre) {
+                  <div>
+                    <span>{{ obra.nombre }}</span>
+                    <i><b [class.negative-bar]="obra.negativa" [style.width.%]="obra.ancho"></b></i>
+                    <strong [class.red-text]="obra.negativa">{{ obra.margen }}%</strong>
+                  </div>
+                } @empty {
+                  <p class="empty-row">No hay obras para calcular rentabilidad.</p>
+                }
+              </div>
+            </article>
+          </section>
+
+          <section hidden class="charts-row dashboard-chart-row">
+            <article class="panel chart-panel dashboard-line-panel">
+              <header>
+                <h2>Ingresos vs Gastos</h2>
+                <div class="chart-legend"><span class="income-dot"></span>Ingresos <span class="expense-dot"></span>Gastos</div>
+              </header>
+              <div class="figma-line-chart">
+                <svg viewBox="0 0 880 238" role="img" aria-label="Grafica de ingresos frente a gastos">
+                  <g class="grid-lines">
+                    <path d="M58 24H858M58 72H858M58 120H858M58 168H858M58 216H858" />
+                    <path d="M58 24V216M138 24V216M218 24V216M298 24V216M378 24V216M458 24V216M538 24V216M618 24V216M698 24V216M778 24V216M858 24V216" />
+                  </g>
+                  <g class="axis-labels">
+                    <text x="16" y="220">0K</text><text x="4" y="172">150K</text><text x="4" y="124">300K</text><text x="4" y="76">450K</text><text x="4" y="28">600K</text>
+                    <text x="52" y="234">Ene</text><text x="132" y="234">Feb</text><text x="212" y="234">Mar</text><text x="292" y="234">Abr</text><text x="372" y="234">May</text><text x="452" y="234">Jun</text><text x="532" y="234">Jul</text><text x="612" y="234">Ago</text><text x="692" y="234">Sep</text><text x="772" y="234">Oct</text><text x="846" y="234">Dic</text>
+                  </g>
+                  <polyline class="income-stroke" points="58,166 138,140 218,150 298,110 378,124 458,101 538,116 618,67 698,82 778,48 858,60" />
+                  <polyline class="expense-stroke" points="58,172 138,150 218,158 298,126 378,135 458,118 538,130 618,88 698,100 778,70 858,78" />
+                  <polyline class="gain-stroke" points="58,206 138,201 218,207 298,199 378,201 458,196 538,201 618,194 698,194 778,190 858,191" />
+                </svg>
+              </div>
+            </article>
+
+            <article class="panel donut-panel dashboard-donut-panel">
+              <header>
+                <h2>Distribución de gastos</h2>
+              </header>
+              <div class="figma-donut-layout">
+                <div class="figma-donut-chart" aria-label="Distribucion de gastos por categoria"></div>
+                <ul class="figma-donut-legend">
+                  <li><span class="legend-materiales"></span><em>Materiales</em><strong>38%</strong></li>
+                  <li><span class="legend-mano"></span><em>Mano de obra</em><strong>30%</strong></li>
+                  <li><span class="legend-maquinaria"></span><em>Maquinaria</em><strong>14%</strong></li>
+                  <li><span class="legend-transporte"></span><em>Transporte</em><strong>8%</strong></li>
+                  <li><span class="legend-otros"></span><em>Otros</em><strong>10%</strong></li>
+                </ul>
+              </div>
+            </article>
+          </section>
+
+          <section hidden class="charts-row dashboard-chart-row dashboard-financial-row">
+            <article class="panel chart-panel dashboard-line-panel">
+              <header><h2>Ganancia mensual</h2></header>
+              <div class="figma-line-chart compact-chart">
+                <svg viewBox="0 0 880 210" role="img" aria-label="Ganancia mensual">
+                  <g class="grid-lines"><path d="M58 18H858M58 62H858M58 106H858M58 150H858M58 194H858" /></g>
+                  <g class="axis-labels"><text x="10" y="198">-40K</text><text x="22" y="154">0K</text><text x="10" y="110">40K</text><text x="10" y="66">80K</text><text x="4" y="22">120K</text><text x="50" y="208">Jun</text><text x="210" y="208">Jul</text><text x="370" y="208">Ago</text><text x="530" y="208">Sep</text><text x="690" y="208">Oct</text><text x="846" y="208">Nov</text></g>
+                  <polyline class="gain-stroke" points="58,145 218,132 378,105 538,116 698,76 858,58" />
+                </svg>
+              </div>
+            </article>
+
+            <article class="panel dashboard-bar-panel profitability-panel">
+              <header><h2>Rentabilidad por obra (%)</h2></header>
+              <div class="profitability-bars">
+                <div><span>Las Torres</span><i><b style="width: 72%"></b></i><strong>16%</strong></div>
+                <div><span>Plaza Norte</span><i><b class="negative-bar" style="width: 28%"></b></i><strong class="red-text">-10%</strong></div>
+                <div><span>Río Verde</span><i><b style="width: 88%"></b></i><strong>24%</strong></div>
+                <div><span>Textil Andina</span><i><b style="width: 61%"></b></i><strong>14%</strong></div>
+                <div><span>Los Pinos</span><i><b style="width: 48%"></b></i><strong>11%</strong></div>
+              </div>
+            </article>
+          </section>
+
+          <article class="panel table-panel dashboard-recent-works">
+            <header><h2>Obras recientes</h2><button type="button" class="text-button" (click)="navegar('obras')">Ver todas</button></header>
+            <table>
+              <thead><tr><th>Obra</th><th>Cliente</th><th>Responsable</th><th>Avance</th><th>Presupuesto</th><th>Gastos</th><th>Ganancia</th><th>Estado</th><th></th></tr></thead>
+              <tbody>
+                @for (obra of obrasRecientesDashboard(); track obra.id) {
+                  <tr>
+                    <td><strong>{{ obra.nombre }}</strong><small>{{ obra.codigo }}</small></td>
+                    <td>{{ obra.cliente }}</td><td>{{ obra.responsable.replace('Ing. ', '') }}</td>
+                    <td><span class="progress-cell"><span class="mini-progress"><i [style.width.%]="obra.avance"></i></span>{{ obra.avance }}%</span></td>
+                    <td>{{ formatoMillones(obra.presupuesto) }}</td><td>{{ formatoMillones(obra.gastos) }}</td>
+                    <td class="money" [class.negative]="gananciaObra(obra.ingresos, obra.gastos, obra.presupuesto) < 0">{{ formatoMillones(gananciaObra(obra.ingresos, obra.gastos, obra.presupuesto)) }}</td>
+                    <td><span class="status" [class]="obra.estado">{{ estadoObraEtiqueta(obra.estado) }}</span></td><td class="actions icon-actions"><button type="button" aria-label="Ver obra" (click)="verObra(obra)" [innerHTML]="iconoSvg('eye')"></button></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            <footer class="table-footer"><span>Mostrando {{ obrasRecientesDashboard().length }} de {{ datos.obras().length }} obras</span></footer>
+          </article>
+
+          <section class="dashboard-small-metrics dashboard-summary-cards">
+            @for (resumen of resumenOperativoDashboard(); track resumen.etiqueta) {
+              <article>
+                <span>{{ resumen.etiqueta }}</span>
+                <strong>{{ resumen.valor }}</strong>
+                <small [ngClass]="resumen.tono + '-text'">{{ resumen.detalle }}</small>
+              </article>
+            }
+          </section>
+
+          <section hidden class="dashboard-small-metrics dashboard-summary-cards">
+            <article><span>Cuentas por cobrar</span><strong>S/ 1,230,000</strong><small class="orange-text">3 obras pendientes</small></article>
+            <article><span>Cuentas por pagar</span><strong>S/ 445,000</strong><small class="red-text">Proveedores y servicios</small></article>
+            <article><span>Próxima planilla</span><strong>S/ 48,500</strong><small>Semana 48 · 25 Nov 2024</small></article>
+          </section>
+        } @else if (vista() === 'obras') {
+          @if (vistaDetalleObra() && obraDetalle()) {
+            <section class="page-heading obra-detail-heading">
+              <div>
+                <button type="button" class="text-button back-link" (click)="volverListadoObras()">&lt; Volver a obras</button>
+                <h1>{{ obraDetalle()!.nombre }}</h1>
+                <p>{{ obraDetalle()!.codigo }} - {{ obraDetalle()!.ubicacion }}</p>
+              </div>
+              <div class="detail-heading-actions">
+                <button type="button" class="ghost-button" (click)="editarObra(obraDetalle()!)">Editar obra</button>
+                <button type="button" class="primary-button" (click)="volverListadoObras()">Ver listado</button>
+              </div>
+            </section>
+
+            <section class="obra-detail-hero panel">
+              <div class="obra-detail-image" [style.background-image]="'linear-gradient(90deg, rgba(8, 27, 49, 0.78), rgba(8, 27, 49, 0.28)), url(' + obraDetalle()!.imagen + ')'">
+                <span>{{ obraDetalle()!.cliente }}</span>
+                <strong>{{ estadoObraEtiqueta(obraDetalle()!.estado) }}</strong>
+              </div>
+              <div class="obra-detail-progress">
+                <span><b>Avance general</b><strong>{{ obraDetalle()!.avance }}%</strong></span>
+                <div class="wide-progress"><i [style.width.%]="obraDetalle()!.avance"></i></div>
+              </div>
+            </section>
+
+            <section class="obra-detail-kpis">
+              <article class="panel"><span>Presupuesto</span><strong>{{ formatoMoneda(obraDetalle()!.presupuesto) }}</strong><small>Aprobado para la obra</small></article>
+              <article class="panel"><span>Ingresos</span><strong>{{ formatoMoneda(obraDetalle()!.ingresos) }}</strong><small>Recibidos a la fecha</small></article>
+              <article class="panel"><span>Gastos</span><strong>{{ formatoMoneda(obraDetalle()!.gastos) }}</strong><small>Acumulados</small></article>
+              <article class="panel"><span>Ganancia</span><strong [class.negative]="gananciaObra(obraDetalle()!.ingresos, obraDetalle()!.gastos, obraDetalle()!.presupuesto) < 0">{{ formatoMoneda(gananciaObra(obraDetalle()!.ingresos, obraDetalle()!.gastos, obraDetalle()!.presupuesto)) }}</strong><small>Presupuesto + ingresos - gastos</small></article>
+            </section>
+
+            <section class="obra-detail-layout">
+              <article class="panel obra-detail-info">
+                <header><h2>Datos generales</h2></header>
+                <dl>
+                  <div><dt>Cliente</dt><dd>{{ obraDetalle()!.cliente }}</dd></div>
+                  <div><dt>Ubicaci&oacute;n</dt><dd>{{ obraDetalle()!.ubicacion }}</dd></div>
+                  <div><dt>Fecha de inicio</dt><dd>{{ obraDetalle()!.fechaInicio }}</dd></div>
+                  <div><dt>Fin estimado</dt><dd>{{ obraDetalle()!.fechaFin }}</dd></div>
+                  <div><dt>Estado</dt><dd><button type="button" class="state-toggle" [class.active]="obraDetalle()!.estado === 'en_ejecucion'" [class.inactive]="obraDetalle()!.estado === 'finalizada'" [attr.aria-pressed]="obraDetalle()!.estado === 'en_ejecucion'" (click)="alternarEstadoObra(obraDetalle()!)"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ estadoObraEtiqueta(obraDetalle()!.estado) }}</span></button></dd></div>
+                </dl>
+              </article>
+
+              <article class="panel table-panel obra-detail-table">
+                <header><h2>Planillas de la obra</h2><span>{{ planillasObraDetalle().length }} registros</span></header>
+                <table>
+                  <thead><tr><th>Per&iacute;odo</th><th>Total</th><th>Estado</th></tr></thead>
+                  <tbody>
+                    @for (planilla of planillasObraDetalle().slice(0, 5); track planilla.id) {
+                      <tr><td><strong>{{ planilla.periodo }}</strong></td><td class="money">{{ formatoMoneda(planilla.total) }}</td><td><span class="status" [class]="planilla.estado.toLowerCase()">{{ estadoPlanillaEtiqueta(planilla) }}</span></td></tr>
+                    } @empty {<tr><td colspan="3" class="empty-row">No hay planillas registradas.</td></tr>}
+                  </tbody>
+                </table>
+              </article>
+            </section>
+
+            <section class="charts-row obra-detail-movements">
+              <article class="panel table-panel">
+                <header><h2>Gastos recientes</h2><span>{{ gastosObraDetalle().length }} registros</span></header>
+                <table>
+                  <thead><tr><th>Descripci&oacute;n</th><th>Categor&iacute;a</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead>
+                  <tbody>
+                    @for (gasto of gastosObraDetalle().slice(0, 6); track gasto.id) {
+                      <tr><td><strong>{{ gasto.descripcion }}</strong></td><td>{{ gasto.categoria }}</td><td>{{ gasto.fecha }}</td><td class="money">{{ formatoMoneda(gasto.monto) }}</td><td><span class="status" [class]="gasto.estado">{{ gasto.estado === 'pagado' ? 'Pagado' : 'Pendiente' }}</span></td></tr>
+                    } @empty {<tr><td colspan="5" class="empty-row">No hay gastos registrados.</td></tr>}
+                  </tbody>
+                </table>
+              </article>
+
+              <article class="panel table-panel">
+                <header><h2>Ingresos recientes</h2><span>{{ ingresosObraDetalle().length }} registros</span></header>
+                <table>
+                  <thead><tr><th>Cliente</th><th>Tipo</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead>
+                  <tbody>
+                    @for (ingreso of ingresosObraDetalle().slice(0, 6); track ingreso.id) {
+                      <tr><td><strong>{{ ingreso.cliente }}</strong></td><td>{{ ingreso.tipo }}</td><td>{{ ingreso.fecha }}</td><td class="money">{{ formatoMoneda(ingreso.monto) }}</td><td><span class="status" [class]="ingreso.estado">{{ estadoObraEtiqueta(ingreso.estado) }}</span></td></tr>
+                    } @empty {<tr><td colspan="5" class="empty-row">No hay ingresos registrados.</td></tr>}
+                  </tbody>
+                </table>
+              </article>
+            </section>
+          } @else {
+          <section class="page-heading">
+            <div>
+              <h1>Gestión de obras</h1>
+              <p>{{ obrasFiltradas().length }} obras encontradas</p>
+            </div>
+            <button type="button" class="primary-button" (click)="abrirModal('obra')">+ Nueva obra</button>
+          </section>
+
+          <section class="filter-bar">
+            <input [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" placeholder="Buscar obra o cliente..." />
+            <select [value]="filtroEstadoObra()" (change)="filtroEstadoObra.set($any($event.target).value)" aria-label="Filtrar obras por estado"><option value="todos">Todos los estados</option><option value="en_ejecucion">Activas</option><option value="finalizada">Finalizadas</option></select>
+            <select [value]="ordenObras()" (change)="ordenObras.set($any($event.target).value)" aria-label="Ordenar obras"><option value="nombre">Ordenar por: Nombre</option><option value="avance">Ordenar por: Avance</option><option value="presupuesto">Ordenar por: Presupuesto</option></select>
+            <button class="view-toggle" [class.active]="modoVistaObras() === 'lista'" type="button" (click)="modoVistaObras.set('lista')">Lista</button>
+            <button class="view-toggle" [class.active]="modoVistaObras() === 'grid'" type="button" (click)="modoVistaObras.set('grid')">Grid</button>
+          </section>
+
+          @if (modoVistaObras() === 'lista') {
+            <article class="panel table-panel">
+              <table>
+                <thead><tr><th>Obra</th><th>Cliente</th><th>Avance</th><th>Presupuesto</th><th>Ingresos</th><th>Gastos</th><th>Ganancia</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  @for (obra of obrasFiltradas(); track obra.id) {
+                    <tr>
+                      <td><strong>{{ obra.nombre }}</strong><small>{{ obra.codigo }} - {{ obra.ubicacion }}</small></td>
+                      <td>{{ obra.cliente }}</td>
+                      <td class="progress-cell"><span class="mini-progress"><i [style.width.%]="obra.avance"></i></span>{{ obra.avance }}%</td>
+                      <td>{{ formatoMoneda(obra.presupuesto) }}</td><td>{{ formatoMoneda(obra.ingresos) }}</td><td>{{ formatoMoneda(obra.gastos) }}</td>
+                      <td [class.negative]="gananciaObra(obra.ingresos, obra.gastos, obra.presupuesto) < 0" class="money">{{ formatoMoneda(gananciaObra(obra.ingresos, obra.gastos, obra.presupuesto)) }}</td>
+                      <td><button type="button" class="state-toggle" [class.active]="obra.estado === 'en_ejecucion'" [class.inactive]="obra.estado === 'finalizada'" [attr.aria-pressed]="obra.estado === 'en_ejecucion'" [attr.aria-label]="'Cambiar estado de ' + obra.nombre" (click)="alternarEstadoObra(obra)"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ obra.estado === 'finalizada' ? 'Finalizada' : 'Activa' }}</span></button></td>
+                      <td class="actions icon-actions"><button type="button" aria-label="Ver obra" (click)="verObra(obra)" [innerHTML]="iconoSvg('eye')"></button><button type="button" aria-label="Editar obra" (click)="editarObra(obra)" [innerHTML]="iconoSvg('edit')"></button><button type="button" aria-label="Eliminar obra" (click)="eliminarObra(obra)" [innerHTML]="iconoSvg('trash')"></button></td>
+                    </tr>
+                  } @empty {<tr><td colspan="9" class="empty-row">No hay obras que coincidan con los filtros.</td></tr>}
+                </tbody>
+              </table>
+              <footer class="table-footer"><span>Mostrando {{ obrasFiltradas().length }} de {{ datos.obras().length }} obras</span></footer>
+            </article>
+          } @else {
+            <section class="obras-grid">
+              @for (obra of obrasFiltradas(); track obra.id) {
+                <article class="panel obra-card">
+                  <header><div><small>{{ obra.codigo }}</small><h2>{{ obra.nombre }}</h2></div><button type="button" class="state-toggle" [class.active]="obra.estado === 'en_ejecucion'" [class.inactive]="obra.estado === 'finalizada'" [attr.aria-pressed]="obra.estado === 'en_ejecucion'" [attr.aria-label]="'Cambiar estado de ' + obra.nombre" (click)="alternarEstadoObra(obra)"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ obra.estado === 'finalizada' ? 'Finalizada' : 'Activa' }}</span></button></header>
+                  <p>{{ obra.cliente }}</p><small>{{ obra.ubicacion }}</small>
+                  <div class="obra-card-progress"><span><b>Avance</b><strong>{{ obra.avance }}%</strong></span><div class="wide-progress"><i [style.width.%]="obra.avance"></i></div></div>
+                  <dl><div><dt>Presupuesto</dt><dd>{{ formatoMoneda(obra.presupuesto) }}</dd></div><div><dt>Ingresos</dt><dd>{{ formatoMoneda(obra.ingresos) }}</dd></div><div><dt>Gastos</dt><dd>{{ formatoMoneda(obra.gastos) }}</dd></div><div><dt>Ganancia</dt><dd [class.negative]="gananciaObra(obra.ingresos, obra.gastos, obra.presupuesto) < 0">{{ formatoMoneda(gananciaObra(obra.ingresos, obra.gastos, obra.presupuesto)) }}</dd></div></dl>
+                  <footer class="icon-actions"><button type="button" aria-label="Ver obra" (click)="verObra(obra)" [innerHTML]="iconoSvg('eye')"></button><button type="button" aria-label="Editar obra" (click)="editarObra(obra)" [innerHTML]="iconoSvg('edit')"></button><button type="button" aria-label="Eliminar obra" (click)="eliminarObra(obra)" [innerHTML]="iconoSvg('trash')"></button></footer>
+                </article>
+              } @empty {<p class="empty-row">No hay obras que coincidan con los filtros.</p>}
+            </section>
+          }
+          }
+        } @else if (vista() === 'trabajadores' || vista() === 'cargos' || vista() === 'clientes' || vista() === 'categorias-gasto' || vista() === 'tipos-ingreso') {
+          <section class="page-heading">
+            @if (vista() === 'trabajadores') {
+              <div><h1>Trabajadores</h1><p>{{ datos.trabajadores().length }} trabajadores registrados</p></div>
+              <button type="button" class="primary-button" (click)="abrirModal('trabajador')">+ Nuevo trabajador</button>
+            } @else if (vista() === 'cargos') {
+              <div><h1>Cargos</h1><p>{{ datos.cargos().length }} cargos registrados</p></div>
+              <button type="button" class="primary-button" (click)="abrirModal('cargo')">+ Nuevo cargo</button>
+            } @else if (vista() === 'clientes') {
+              <div><h1>Clientes</h1><p>{{ datos.clientes().length }} clientes registrados</p></div>
+              <button type="button" class="primary-button" (click)="abrirModal('cliente')">+ Nuevo cliente</button>
+            } @else if (vista() === 'categorias-gasto') {
+              <div><h1>Gastos: Categorias</h1><p>{{ datos.categoriasGasto().length }} categorias registradas</p></div>
+              <button type="button" class="primary-button" (click)="abrirModal('categoria-gasto')">+ Nueva categoria</button>
+            } @else {
+              <div><h1>Ingresos: Tipos</h1><p>{{ datos.tiposIngreso().length }} tipos registrados</p></div>
+              <button type="button" class="primary-button" (click)="abrirModal('tipo-ingreso')">+ Nuevo tipo</button>
+            }
+          </section>
+          @if (vista() === 'trabajadores') {
+            <section class="filter-bar">
+              <input [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" placeholder="Buscar trabajador..." />
+              <select [value]="filtroCargoTrabajador()" (change)="filtroCargoTrabajador.set($any($event.target).value)">
+                <option value="todos">Todos los cargos</option>
+                @for (cargo of cargosTrabajador(); track cargo.codigo) {<option [value]="cargo.codigo">{{ cargo.nombre }}</option>}
+              </select>
+              <select [value]="filtroEstadoTrabajador()" (change)="filtroEstadoTrabajador.set($any($event.target).value)">
+                <option value="todos">Todos los estados</option>
+                @for (estado of estadosTrabajador; track estado.valor) {<option [value]="estado.valor">{{ estado.etiqueta }}</option>}
+              </select>
+            </section>
+            <article class="panel table-panel">
+              <table>
+                <thead><tr><th>Nombres</th><th>Apellidos</th><th>DNI</th><th>Cargo</th><th>Sueldo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  @for (trabajador of trabajadoresFiltrados(); track trabajador.id) {
+                    <tr>
+                      <td><strong>{{ trabajador.nombres }}</strong></td>
+                      <td>{{ trabajador.apellidos }}</td>
+                      <td>{{ trabajador.dni }}</td>
+                      <td>{{ cargoTrabajadorEtiqueta(trabajador.cargo) }}</td>
+                      <td class="money">{{ formatoMoneda(trabajador.sueldo) }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          class="state-toggle"
+                          [class.active]="trabajador.estado === 'activo'"
+                          [class.inactive]="trabajador.estado === 'inactivo'"
+                          [attr.aria-pressed]="trabajador.estado === 'activo'"
+                          (click)="alternarEstadoTrabajador(trabajador)"
+                        >
+                          <span class="state-toggle-track"><span class="state-toggle-thumb"></span></span>
+                          <span>{{ estadoObraEtiqueta(trabajador.estado) }}</span>
+                        </button>
+                      </td>
+                      <td class="actions icon-actions"><button aria-label="Editar trabajador" (click)="editarTrabajador(trabajador)" [innerHTML]="iconoSvg('edit')"></button><button aria-label="Eliminar trabajador" (click)="eliminarTrabajador(trabajador)" [innerHTML]="iconoSvg('trash')"></button></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              <footer class="table-footer"><span>Mostrando {{ trabajadoresFiltrados().length }} de {{ datos.trabajadores().length }} trabajadores</span></footer>
+            </article>
+          } @else if (vista() === 'cargos') {
+            <article class="panel table-panel">
+              <table>
+                <thead><tr><th>ID</th><th>Cargo</th><th>Sueldo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  @for (cargo of datos.cargos(); track cargo.id) {
+                    <tr>
+                      <td>{{ $index + 1 }}</td>
+                      <td><strong>{{ cargo.nombre }}</strong></td>
+                      <td class="money">{{ formatoMoneda(cargo.sueldo) }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          class="state-toggle"
+                          [class.active]="cargo.estado === 'activo'"
+                          [class.inactive]="cargo.estado === 'inactivo'"
+                          [attr.aria-pressed]="cargo.estado === 'activo'"
+                          (click)="alternarEstadoCargo(cargo)"
+                        >
+                          <span class="state-toggle-track"><span class="state-toggle-thumb"></span></span>
+                          <span>{{ estadoObraEtiqueta(cargo.estado) }}</span>
+                        </button>
+                      </td>
+                      <td class="actions icon-actions"><button aria-label="Editar cargo" (click)="editarCargo(cargo)" [innerHTML]="iconoSvg('edit')"></button><button aria-label="Eliminar cargo" (click)="eliminarCargo(cargo)" [innerHTML]="iconoSvg('trash')"></button></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              <footer class="table-footer"><span>{{ datos.cargos().length }} cargos registrados</span></footer>
+            </article>
+          } @else if (vista() === 'clientes') {
+            <article class="panel table-panel">
+              <table>
+                <thead><tr><th>ID</th><th>Nombres</th><th>Apellidos</th><th>Telefono</th><th>Direccion</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  @for (cliente of datos.clientes(); track cliente.id) {
+                    <tr>
+                      <td>{{ $index + 1 }}</td>
+                      <td><strong>{{ cliente.nombres }}</strong></td>
+                      <td>{{ cliente.apellidos || '-' }}</td>
+                      <td>{{ cliente.telefono || '-' }}</td>
+                      <td>{{ cliente.direccion || '-' }}</td>
+                      <td><button type="button" class="state-toggle" [class.active]="cliente.estado === 'activo'" [class.inactive]="cliente.estado === 'inactivo'" (click)="alternarEstadoCliente(cliente)"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ estadoObraEtiqueta(cliente.estado) }}</span></button></td>
+                      <td class="actions icon-actions"><button aria-label="Editar cliente" (click)="editarCliente(cliente)" [innerHTML]="iconoSvg('edit')"></button><button aria-label="Eliminar cliente" (click)="eliminarCliente(cliente)" [innerHTML]="iconoSvg('trash')"></button></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              <footer class="table-footer"><span>{{ datos.clientes().length }} clientes registrados</span></footer>
+            </article>
+          } @else if (vista() === 'categorias-gasto') {
+            <article class="panel table-panel">
+              <table>
+                <thead><tr><th>ID</th><th>Categoria</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  @for (categoria of datos.categoriasGasto(); track categoria.id) {
+                    <tr>
+                      <td>{{ $index + 1 }}</td>
+                      <td><strong>{{ categoria.nombre }}</strong></td>
+                      <td><button type="button" class="state-toggle" [class.active]="categoria.estado === 'activo'" [class.inactive]="categoria.estado === 'inactivo'" (click)="alternarEstadoCategoriaGasto(categoria)"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ estadoObraEtiqueta(categoria.estado) }}</span></button></td>
+                      <td class="actions icon-actions"><button aria-label="Editar categoria" (click)="editarCategoriaGasto(categoria)" [innerHTML]="iconoSvg('edit')"></button><button aria-label="Eliminar categoria" (click)="eliminarCategoriaGasto(categoria)" [innerHTML]="iconoSvg('trash')"></button></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              <footer class="table-footer"><span>{{ datos.categoriasGasto().length }} categorias registradas</span></footer>
+            </article>
+          } @else {
+            <article class="panel table-panel">
+              <table>
+                <thead><tr><th>ID</th><th>Tipo de ingreso</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  @for (tipo of datos.tiposIngreso(); track tipo.id) {
+                    <tr>
+                      <td>{{ $index + 1 }}</td>
+                      <td><strong>{{ tipo.nombre }}</strong></td>
+                      <td><button type="button" class="state-toggle" [class.active]="tipo.estado === 'activo'" [class.inactive]="tipo.estado === 'inactivo'" (click)="alternarEstadoTipoIngreso(tipo)"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ estadoObraEtiqueta(tipo.estado) }}</span></button></td>
+                      <td class="actions icon-actions"><button aria-label="Editar tipo" (click)="editarTipoIngreso(tipo)" [innerHTML]="iconoSvg('edit')"></button><button aria-label="Eliminar tipo" (click)="eliminarTipoIngreso(tipo)" [innerHTML]="iconoSvg('trash')"></button></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              <footer class="table-footer"><span>{{ datos.tiposIngreso().length }} tipos registrados</span></footer>
+            </article>
+          }
+        } @else if (vista() === 'asistencia') {
+          <section class="page-heading">
+            <div><h1>Control de asistencia</h1><p>Registro diario de asistencia por obra</p></div>
+            <button type="button" class="primary-button" (click)="registrarAsistenciaRapida()">Guardar</button>
+          </section>
+          <section class="filter-bar compact-filters">
+            <select><option>{{ datos.obras()[0]?.nombre ?? 'Obra sin seleccionar' }}</option></select>
+            <input type="text" [value]="asistenciaResumen().fecha" />
+            <button class="view-toggle active">Diaria</button><button class="view-toggle">Semanal</button><button class="view-toggle">Mensual</button>
+          </section>
+          <section class="kpi-grid attendance-kpis">
+            <article class="kpi-card center"><strong class="green-text">{{ asistenciaResumen().presente }}</strong><p>Presente</p></article>
+            <article class="kpi-card center"><strong class="orange-text">{{ asistenciaResumen().tardanza }}</strong><p>Tardanza</p></article>
+            <article class="kpi-card center"><strong class="red-text">{{ asistenciaResumen().falta }}</strong><p>Falta</p></article>
+            <article class="kpi-card center"><strong class="blue-text">{{ asistenciaResumen().permiso }}</strong><p>Permiso</p></article>
+            <article class="kpi-card center"><strong>{{ asistenciaResumen().descanso }}</strong><p>Descanso</p></article>
+          </section>
+          <article class="panel attendance-progress">
+            <header><h2>Asistencia del día</h2><strong>{{ asistenciaResumen().presente }}/{{ asistenciaResumen().total }} presentes ({{ asistenciaPorcentaje() }}%)</strong></header>
+            <div class="wide-progress"><span [style.width.%]="asistenciaPorcentaje()"></span></div>
+          </article>
+          <article class="panel table-panel">
+            <header><h2>Lista de trabajadores · {{ asistenciaResumen().fecha }}</h2></header>
+            <table>
+              <thead><tr><th>Trabajador</th><th>Cargo</th><th>Entrada</th><th>Salida</th><th>Estado</th><th>H. normales</th><th>H. extras</th><th>Obs.</th></tr></thead>
+              <tbody>
+                @for (asistencia of datos.asistencias(); track asistencia.id) {
+                  <tr>
+                    <td class="person-cell">
+                      @if (asistencia.foto) {
+                        <img [src]="asistencia.foto" [alt]="asistencia.trabajador" />
+                      } @else {
+                        <span class="avatar-initials">{{ asistencia.trabajador.charAt(0) }}</span>
+                      }
+                      <strong>{{ asistencia.trabajador.split(' ').slice(0, 2).join(' ') }}</strong>
+                    </td>
+                    <td>{{ asistencia.cargo }}</td>
+                    <td><input class="time-input" [value]="asistencia.entrada ?? '--:--'" /></td>
+                    <td><input class="time-input" [value]="asistencia.salida ?? '--:--'" /></td>
+                    <td class="attendance-buttons"><button [class.active]="asistencia.estado === 'presente'">P</button><button [class.active]="asistencia.estado === 'tardanza'">T</button><button [class.fail]="asistencia.estado === 'falta'">F</button><button [class.active]="asistencia.estado === 'permiso'">Pe</button><button [class.active]="asistencia.estado === 'descanso'">D</button></td>
+                    <td>{{ asistencia.horasNormales }}</td>
+                    <td class="orange-text">{{ asistencia.horasExtras }}</td>
+                    <td><input class="obs-input" [value]="asistencia.observacion ?? ''" placeholder="Observacion..." /></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </article>
+        } @else if (vista() === 'planillas') {
+          <section class="page-heading">
+            <div><h1>Planillas</h1><p>Cálculo y gestión de pagos</p></div>
+            <div class="heading-actions">
+              <button type="button" class="ghost-button" (click)="exportarPlanillasObraPdf()">Exportar PDF</button>
+              <button type="button" class="primary-button" (click)="generarPlanilla()">+ Generar planilla</button>
+            </div>
+          </section>
+          <div class="filter-bar payroll-work-filter">
+            <label>
+              <span>Obra</span>
+              <select [value]="obraPlanillasSeleccionadaId() ?? ''" (change)="seleccionarObraPlanillas($any($event.target).value)">
+                <option value="">Todas las obras</option>
+                @for (obra of datos.obras(); track obra.id) {
+                  <option [value]="obra.id">{{ obra.nombre }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <section class="kpi-grid payroll-kpis">
+            <article class="kpi-card"><strong class="blue-text">{{ planillasResumen().total }}</strong><p>Total planillas</p></article>
+            <article class="kpi-card"><strong class="orange-text">{{ planillasResumen().pendientes }}</strong><p>Pendientes</p></article>
+            <article class="kpi-card"><strong class="blue-text">{{ planillasResumen().aprobadas }}</strong><p>Pagadas</p></article>
+            <article class="kpi-card"><strong class="green-text">{{ formatoMoneda(planillasResumen().monto) }}</strong><p>Monto total mes</p></article>
+          </section>
+          <article class="panel table-panel">
+            <header><h2>Registro de planillas{{ obraPlanillasSeleccionada() ? ' - ' + obraPlanillasSeleccionada()!.nombre : '' }}</h2></header>
+            <table>
+              <thead><tr><th>Período</th><th>Obra</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody>
+                @for (fila of planillasFiltradas(); track fila.id) {
+                  <tr>
+                    <td><strong>{{ fila.periodo }}</strong></td>
+                    <td>{{ fila.obra }}</td>
+                    <td class="money">{{ formatoMoneda(fila.total) }}</td>
+                    <td>
+                      <button
+                        type="button"
+                        class="state-toggle payroll-state-toggle"
+                        [class.active]="estadoPlanillaPagada(fila)"
+                        [class.inactive]="!estadoPlanillaPagada(fila)"
+                        [attr.aria-pressed]="estadoPlanillaPagada(fila)"
+                        (click)="alternarEstadoPlanilla(fila)"
+                      >
+                        <span class="state-toggle-track"><span class="state-toggle-thumb"></span></span>
+                        <span>{{ estadoPlanillaEtiqueta(fila) }}</span>
+                      </button>
+                    </td>
+                    <td class="actions icon-actions">
+                      <button type="button" aria-label="Ver planilla" (click)="verPlanilla(fila)" [innerHTML]="iconoSvg('eye')"></button>
+                      @if (!estadoPlanillaPagada(fila)) {
+                        <button type="button" aria-label="Editar planilla" (click)="editarPlanilla(fila)" [innerHTML]="iconoSvg('edit')"></button>
+                        <button type="button" aria-label="Eliminar planilla" (click)="eliminarPlanilla(fila)" [innerHTML]="iconoSvg('trash')"></button>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="empty-row">No hay planillas registradas para esta obra.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </article>
+        } @else if (vista() === 'gastos') {
+          <section class="page-heading"><div><h1>Gastos</h1><p>Control de egresos por obra</p></div><button class="primary-button" type="button" (click)="abrirModal('gasto')">+ Registrar gasto</button></section>
+          <section class="module-stat-grid six compact-stats">
+            <article><strong>{{ formatoMoneda(gastosResumen().total) }}</strong><span>{{ obraGastosSeleccionada() ? 'Total de la obra' : 'Total general' }}</span></article>
+            <article><strong>{{ gastosResumen().registros }}</strong><span>Gastos registrados</span></article>
+            <article><strong class="orange-text">{{ formatoMoneda(gastosResumen().pendientes) }}</strong><span>Pendientes</span></article>
+            <article><strong class="green-text">{{ formatoMoneda(gastosResumen().pagados) }}</strong><span>Pagados</span></article>
+            <article><strong class="orange-text">{{ gastosResumen().cantidadPendientes }}</strong><span>Cantidad pendientes</span></article>
+            <article><strong class="green-text">{{ gastosResumen().cantidadPagados }}</strong><span>Cantidad pagados</span></article>
+          </section>
+          <div class="filter-bar financial-filters">
+            <input [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" placeholder="Buscar gasto..." />
+            <select [value]="obraGastosSeleccionada()?.id ?? ''" (change)="seleccionarObraGastos($any($event.target).value)" aria-label="Seleccionar obra">
+              <option value="">Todas las obras</option>
+              @for (obra of datos.obras(); track obra.id) {<option [value]="obra.id">{{ obra.nombre }}</option>}
+            </select>
+            <select [value]="filtroCategoriaGasto()" (change)="filtroCategoriaGasto.set($any($event.target).value)" aria-label="Filtrar por categoria">
+              <option value="todas">Todas las categorias</option>
+              @for (categoria of categoriasGasto(); track categoria.id) {<option [value]="categoria.nombre">{{ categoria.nombre }}</option>}
+            </select>
+            <select [value]="filtroEstadoGasto()" (change)="filtroEstadoGasto.set($any($event.target).value)" aria-label="Filtrar por estado">
+              <option value="todos">Todos los estados</option><option value="pendiente">Pendiente</option><option value="pagado">Pagado</option>
+            </select>
+            <input type="date" [value]="fechaInicioGasto()" (change)="fechaInicioGasto.set($any($event.target).value)" aria-label="Fecha inicial" />
+            <input type="date" [value]="fechaFinGasto()" (change)="fechaFinGasto.set($any($event.target).value)" aria-label="Fecha final" />
+          </div>
+          <article class="panel table-panel module-screen-panel no-top-gap">
+            <table><thead><tr><th>Descripcion</th><th>Obra</th><th>Categoria</th><th>Monto</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+              @for (gasto of gastosFiltrados(); track gasto.id) {
+                <tr>
+                  <td>{{ gasto.descripcion }}</td><td>{{ datos.nombreObra(gasto.obraId) }}</td><td><span class="category-chip">{{ gasto.categoria }}</span></td><td class="money">{{ formatoMoneda(gasto.monto) }}</td><td>{{ gasto.fecha }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="state-toggle"
+                      [class.active]="gasto.estado === 'pagado'"
+                      [class.inactive]="gasto.estado === 'pendiente'"
+                      [attr.aria-pressed]="gasto.estado === 'pagado'"
+                      [attr.aria-label]="gasto.estado === 'pagado' ? 'Marcar gasto como pendiente' : 'Marcar gasto como pagado'"
+                      (click)="alternarEstadoGasto(gasto)"
+                    >
+                      <span class="state-toggle-track"><span class="state-toggle-thumb"></span></span>
+                      <span>{{ gasto.estado === 'pagado' ? 'Pagado' : 'Pendiente' }}</span>
+                    </button>
+                  </td>
+                  <td class="actions icon-actions"><button type="button" title="Editar gasto" aria-label="Editar gasto" (click)="editarGasto(gasto)" [innerHTML]="iconoSvg('edit')"></button><button type="button" title="Eliminar gasto" aria-label="Eliminar gasto" (click)="eliminarGasto(gasto)" [innerHTML]="iconoSvg('trash')"></button></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="empty-row">No hay gastos registrados para la selección y los filtros aplicados.</td></tr>
+              }
+            </tbody></table>
+          </article>
+        } @else if (vista() === 'ingresos') {
+          <section class="page-heading"><div><h1>Ingresos</h1><p>Pagos y valorizaciones de clientes</p></div><button class="primary-button" type="button" (click)="abrirModal('ingreso')">+ Registrar ingreso</button></section>
+          <section class="module-stat-grid four"><article><strong>{{ formatoMoneda(ingresosResumen().contratado) }}</strong><span>Total contratado</span></article><article><strong class="green-text">{{ formatoMoneda(ingresosResumen().recibidos) }}</strong><span>Pagados</span></article><article><strong class="orange-text">{{ formatoMoneda(ingresosResumen().porCobrar) }}</strong><span>Pendientes</span></article><article><strong>{{ ingresosResumen().registros }}</strong><span>Registros</span></article></section>
+          <article class="panel collection-progress"><header><div><h2>Cobro total acumulado</h2><small>{{ ingresosResumen().porcentaje }}% pagado</small></div><div><strong>{{ formatoMoneda(ingresosResumen().recibidos) }}</strong><small>Meta: {{ formatoMoneda(ingresosResumen().contratado) }}</small></div></header><div class="wide-progress"><span [style.width.%]="ingresosResumen().porcentaje"></span></div></article>
+          <div class="filter-bar financial-filters">
+            <input [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" placeholder="Buscar ingreso..." />
+            <select [value]="obraIngresosSeleccionada()?.id ?? ''" (change)="seleccionarObraIngresos($any($event.target).value)" aria-label="Seleccionar obra">
+              <option value="">Todas las obras</option>
+              @for (obra of datos.obras(); track obra.id) {<option [value]="obra.id">{{ obra.nombre }}</option>}
+            </select>
+            <select [value]="filtroEstadoIngreso()" (change)="filtroEstadoIngreso.set($any($event.target).value)" aria-label="Filtrar por estado">
+              <option value="todos">Todos los estados</option><option value="pendiente">Pendiente</option><option value="pagado">Pagado</option>
+            </select>
+          </div>
+          <article class="panel table-panel module-screen-panel"><header><h2>Historial de ingresos{{ obraIngresosSeleccionada() ? ' - ' + obraIngresosSeleccionada()!.nombre : ' - Todas las obras' }}</h2></header><table><thead><tr><th>Obra</th><th>Cliente</th><th>Tipo</th><th>Monto</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+            @for (ingreso of ingresosFiltrados(); track ingreso.id) {
+              <tr>
+                <td>{{ datos.nombreObra(ingreso.obraId) }}</td>
+                <td>{{ ingreso.cliente }}</td>
+                <td>{{ ingreso.tipo }}</td>
+                <td class="money">{{ formatoMoneda(ingreso.monto) }}</td>
+                <td>{{ ingreso.fecha }}</td>
+                <td><button type="button" class="state-toggle" [class.active]="ingreso.estado === 'pagado'" [class.inactive]="ingreso.estado === 'pendiente'" [attr.aria-pressed]="ingreso.estado === 'pagado'" (click)="alternarEstadoIngreso(ingreso)"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ ingreso.estado === 'pagado' ? 'Pagado' : 'Pendiente' }}</span></button></td>
+                <td class="actions icon-actions"><button type="button" aria-label="Editar ingreso" (click)="editarIngreso(ingreso)" [innerHTML]="iconoSvg('edit')"></button><button type="button" aria-label="Eliminar ingreso" (click)="eliminarIngreso(ingreso)" [innerHTML]="iconoSvg('trash')"></button></td>
+              </tr>
+            } @empty {<tr><td colspan="7" class="empty-row">No hay ingresos registrados para la selección y los filtros aplicados.</td></tr>}
+          </tbody></table></article>
+        } @else if (false) {
+          <section class="page-heading"><div><h1>Ingresos</h1><p>Pagos y valorizaciones de clientes</p></div><button class="primary-button" type="button" (click)="abrirModal('ingreso')">+ Registrar ingreso</button></section>
+          <section class="module-stat-grid four"><article><strong>S/ 14.5M</strong><span>Total contratado</span></article><article><strong class="green-text">S/ 2.90M</strong><span>Ingresos recibidos</span></article><article><strong class="orange-text">S/ 1.36M</strong><span>Por cobrar</span></article><article><strong class="red-text">S/ 1.08M</strong><span>Vencidos</span></article></section>
+          <article class="panel collection-progress"><header><div><h2>Cobro total acumulado</h2><small>20% cobrado</small></div><div><strong>S/ 2.90M</strong><small>Meta: S/ 14.5M</small></div></header><div class="wide-progress"><span style="width:20%"></span></div></article>
+          <article class="panel table-panel module-screen-panel"><header><h2>Historial de ingresos</h2></header><table><thead><tr><th>Obra</th><th>Cliente</th><th>Tipo</th><th>Monto</th><th>Fecha</th><th>Forma de pago</th><th>N° Operación</th><th>Estado</th></tr></thead><tbody>
+            @for (ingreso of datos.ingresos(); track ingreso.id) {<tr><td>{{ datos.nombreObra(ingreso.obraId) }}</td><td>{{ ingreso.cliente }}</td><td>{{ ingreso.tipo }}</td><td class="money">{{ formatoMoneda(ingreso.monto) }}</td><td>{{ ingreso.fecha }}</td><td>Transferencia</td><td>—</td><td><span class="status" [class]="ingreso.estado">{{ ingreso.estado }}</span></td></tr>}
+          </tbody></table></article>
+        } @else if (vista() === 'maquinaria') {
+          <section class="page-heading"><div><h1>Maquinaria, equipos y herramientas</h1><p>Control de activos y mantenimientos</p></div><button class="primary-button">+ Registrar equipo</button></section>
+          <section class="module-stat-grid four"><article><strong>{{ datos.maquinaria().length }}</strong><span>Total equipos</span></article><article><strong class="green-text">{{ metricasVista()[1].valor }}</strong><span>En uso</span></article><article><strong>1</strong><span>Disponibles</span></article><article><strong class="orange-text">2</strong><span>Mantenimiento próximo</span></article></section>
+          <section class="equipment-grid">@for (equipo of datos.maquinaria(); track equipo.id) {<article class="panel equipment-card"><div class="equipment-visual"><span>{{ equipo.tipo }}</span><strong>{{ equipo.codigo }}</strong></div><div class="equipment-card-body"><span class="status" [class]="equipo.estado">{{ estadoObraEtiqueta(equipo.estado) }}</span><h2>{{ equipo.nombre }}</h2><p>{{ equipo.tipo }} · {{ equipo.propiedad }}</p><dl><div><dt>Horas de uso</dt><dd>{{ equipo.horasUso }} h</dd></div><div><dt>Próx. mantenimiento</dt><dd>{{ equipo.mantenimiento }}</dd></div><div><dt>Responsable</dt><dd>{{ equipo.responsable }}</dd></div><div><dt>Obra</dt><dd>{{ datos.nombreObra(equipo.obraId) }}</dd></div></dl><footer><button class="ghost-button">Registrar uso</button><button class="ghost-button">Mantenimiento</button></footer></div></article>}</section>
+        } @else if (vista() === 'documentos') {
+          <section class="page-heading"><div><h1>Documentos</h1><p>Gestor documental por obra</p></div><div class="heading-actions"><button class="icon-command" aria-label="Nueva carpeta">+</button><button class="primary-button" aria-label="Subir documento">Subir</button></div></section>
+          <div class="filter-bar document-filters"><select><option>Todas las obras</option></select><input [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" placeholder="Buscar documento..." /></div>
+          <div class="module-tabs document-tabs">@for (categoria of categoriasDocumentos; track categoria) {<button [class.active]="$first">{{ categoria }}</button>}</div>
+          <article class="upload-zone"><strong>Arrastra archivos aquí o haz clic para cargar</strong><span>PDF, Word, Excel, DWG, imágenes — Hasta 50 MB</span></article>
+          <section class="document-grid">@for (documento of documentosSistema; track documento.nombre) {<article class="panel document-card"><span class="file-type" [ngClass]="documento.tono">{{ documento.tipo }}</span><div><strong>{{ documento.nombre }}</strong><small>{{ documento.tamano }} · {{ documento.fecha }}</small></div><footer><button aria-label="Ver documento">Ver</button><button aria-label="Descargar documento">Descargar</button><button aria-label="Más opciones">···</button></footer></article>}</section>
+        } @else if (vista() === 'reportes') {
+          <section class="page-heading">
+            <div><h1>Centro de reportes</h1><p>{{ obraReportesSeleccionada() ? 'Analisis financiero y operativo de ' + obraReportesSeleccionada()!.nombre : 'Analisis financiero y operativo de todas las obras' }}</p></div>
+            <button type="button" class="primary-button" (click)="exportarReporte('Reportes')">Exportar reporte</button>
+          </section>
+          <section class="filter-bar report-work-filter">
+            <label>Obra
+              <select [value]="obraReportesSeleccionadaId() ?? ''" (change)="seleccionarObraReportes($any($event.target).value)">
+                <option value="">Todas las obras</option>
+                @for (obra of datos.obras(); track obra.id) {
+                  <option [value]="obra.id">{{ obra.nombre }}</option>
+                }
+              </select>
+            </label>
+          </section>
+          <section class="module-stat-grid four">
+            <article><strong>{{ formatoMillones(progresoFinancieroReporte().presupuesto) }}</strong><span>Presupuesto {{ obraReportesSeleccionada() ? 'de la obra' : 'total' }}</span></article>
+            <article><strong class="green-text">{{ formatoMillones(progresoFinancieroReporte().ingresosRegistrados) }}</strong><span>Ingresos registrados</span></article>
+            <article><strong class="orange-text">{{ formatoMillones(progresoFinancieroReporte().gastosTotales) }}</strong><span>Gastos acumulados</span></article>
+            <article><strong [class.red-text]="progresoFinancieroReporte().ganancia < 0" [class.green-text]="progresoFinancieroReporte().ganancia >= 0">{{ formatoMillones(progresoFinancieroReporte().ganancia) }}</strong><span>Ganancia actual</span></article>
+          </section>
+          <section class="charts-row dashboard-chart-row report-analytics-row">
+            <article class="panel chart-panel dashboard-line-panel">
+              <header>
+                <h2>Ingresos vs Gastos</h2>
+                <div class="chart-legend"><span class="income-dot"></span>Ingresos <span class="expense-dot"></span>Gastos</div>
+              </header>
+              <div class="figma-line-chart">
+                <svg viewBox="0 0 880 238" role="img" aria-label="Grafica de ingresos frente a gastos">
+                  <g class="grid-lines">
+                    <path d="M58 24H858M58 72H858M58 120H858M58 168H858M58 216H858" />
+                    <path d="M58 24V216M218 24V216M378 24V216M538 24V216M698 24V216M858 24V216" />
+                  </g>
+                  <g class="axis-labels">
+                    <text x="5" y="28">{{ graficoIngresosGastosReporte().maximo }}</text>
+                    <text x="20" y="220">S/ 0</text>
+                    @for (punto of graficoIngresosGastosReporte().etiquetas; track punto.etiqueta) {
+                      <text [attr.x]="punto.x" y="234">{{ punto.etiqueta }}</text>
+                    }
+                  </g>
+                  <polyline class="income-stroke" [attr.points]="graficoIngresosGastosReporte().ingresos" />
+                  <polyline class="expense-stroke" [attr.points]="graficoIngresosGastosReporte().gastos" />
+                </svg>
+              </div>
+            </article>
+
+            <article class="panel dashboard-bar-panel profitability-panel">
+              <header><h2>{{ obraReportesSeleccionada() ? 'Rentabilidad de la obra (%)' : 'Rentabilidad por obra (%)' }}</h2></header>
+              <div class="profitability-bars">
+                @for (obra of rentabilidadObrasReporte(); track obra.nombre) {
+                  <div>
+                    <span>{{ obra.nombre }}</span>
+                    <i><b [class.negative-bar]="obra.negativa" [style.width.%]="obra.ancho"></b></i>
+                    <strong [class.red-text]="obra.negativa">{{ obra.margen }}%</strong>
+                  </div>
+                } @empty {
+                  <p class="empty-row">No hay obras para calcular rentabilidad.</p>
+                }
+              </div>
+            </article>
+          </section>
+          <section class="charts-row dashboard-chart-row report-analytics-row">
+            <article class="panel dashboard-bar-panel">
+              <header><h2>Distribucion de gastos</h2></header>
+              <div class="profitability-bars">
+                @for (categoria of categoriasGastoReporte(); track categoria.categoria) {
+                  <div>
+                    <span>{{ categoria.categoria }}</span>
+                    <i><b [style.width.%]="categoria.porcentaje"></b></i>
+                    <strong>{{ categoria.porcentaje }}%</strong>
+                  </div>
+                } @empty {
+                  <p class="empty-row">No hay gastos registrados.</p>
+                }
+              </div>
+            </article>
+            <article class="panel collection-progress">
+              <header><div><h2>Lectura ejecutiva</h2><small>Resumen para tomar decisiones</small></div></header>
+              <div class="dashboard-progress-list">
+                <div><span>Cobranza</span><strong>{{ progresoFinancieroReporte().cobranza }}%</strong><div class="wide-progress"><span [style.width.%]="progresoFinancieroReporte().cobranza"></span></div></div>
+                <div><span>Ejecucion de gasto</span><strong>{{ progresoFinancieroReporte().ejecucion }}%</strong><div class="wide-progress"><span [style.width.%]="progresoFinancieroReporte().ejecucion"></span></div></div>
+                <div><span>Margen</span><strong [class.red-text]="progresoFinancieroReporte().margen < 0" [class.green-text]="progresoFinancieroReporte().margen >= 0">{{ progresoFinancieroReporte().margen }}%</strong><small>{{ formatoMoneda(progresoFinancieroReporte().ganancia) }}</small></div>
+              </div>
+            </article>
+          </section>
+          <section class="charts-row dashboard-chart-row report-analytics-row">
+            <article class="panel table-panel report-table-panel">
+              <header><h2>Planillas por obra</h2><span>{{ planillasTablaReporte().length }} semanas</span></header>
+              <table>
+                <thead><tr><th>Periodo</th><th>Obra</th><th>Trabajadores</th><th>Total</th><th>Estado</th></tr></thead>
+                <tbody>
+                  @for (planilla of planillasTablaReporte(); track planilla.periodo + planilla.obra) {
+                    <tr [class.muted-report-row]="planilla.vacia">
+                      <td><strong>{{ planilla.periodo }}</strong></td>
+                      <td>{{ planilla.obra }}</td>
+                      <td>{{ planilla.trabajadores }}</td>
+                      <td class="money">{{ formatoMoneda(planilla.total) }}</td>
+                      <td><span class="status" [class.pagado]="planilla.estado === 'Pagada'" [class.pendiente]="planilla.estado !== 'Pagada'">{{ planilla.estado }}</span></td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" class="empty-row">No hay planillas registradas para el alcance seleccionado.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </article>
+            <article class="panel report-pending-panel">
+              <header><h2>Cuentas pendientes</h2></header>
+              <div class="report-pending-list">
+                @for (cuenta of cuentasPendientesReporte(); track cuenta.titulo) {
+                  <article>
+                    <span>{{ cuenta.titulo }}</span>
+                    <strong [class.red-text]="cuenta.tono === 'red'" [class.orange-text]="cuenta.tono === 'orange'" [class.blue-text]="cuenta.tono === 'blue'">{{ formatoMoneda(cuenta.monto) }}</strong>
+                    <small>{{ cuenta.detalle }}</small>
+                  </article>
+                }
+              </div>
+            </article>
+          </section>
+          <article class="panel table-panel report-table-panel">
+            <header><h2>Comparativo de obras</h2><span>{{ comparativoObrasReporte().length }} registros</span></header>
+            <table>
+              <thead><tr><th>Obra</th><th>Cliente</th><th>Presupuesto</th><th>Ingresos</th><th>Gastos</th><th>Planillas</th><th>Ganancia</th><th>Margen</th><th>Estado</th></tr></thead>
+              <tbody>
+                @for (obra of comparativoObrasReporte(); track obra.obra) {
+                  <tr>
+                    <td><strong>{{ obra.obra }}</strong></td>
+                    <td>{{ obra.cliente }}</td>
+                    <td>{{ formatoMoneda(obra.presupuesto) }}</td>
+                    <td class="money">{{ formatoMoneda(obra.ingresos) }}</td>
+                    <td>{{ formatoMoneda(obra.gastos) }}</td>
+                    <td>{{ formatoMoneda(obra.planillas) }}</td>
+                    <td class="money" [class.negative]="obra.ganancia < 0">{{ formatoMoneda(obra.ganancia) }}</td>
+                    <td [class.red-text]="obra.margen < 0" [class.green-text]="obra.margen >= 0">{{ obra.margen }}%</td>
+                    <td><span class="status">{{ obra.estado }}</span></td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="9" class="empty-row">No hay obras para comparar.</td></tr>
+                }
+              </tbody>
+            </table>
+          </article>
+          <section class="report-grid report-download-grid">@for (reporte of reportesDisponibles; track reporte.nombre) {<article class="panel report-card"><div class="report-icon">R</div><h2>{{ reporte.nombre }}</h2><p>{{ reporte.detalle }}</p><footer><button type="button" class="excel-button" (click)="exportarReporte(reporte.nombre)">Descargar CSV</button></footer></article>}</section>
+          @if (false) {
+          <section class="page-heading"><div><h1>Centro de reportes</h1><p>Genera y exporta reportes del sistema</p></div></section>
+          <article class="panel report-config"><header><h2>Configuración de reporte</h2></header><div><label>Obra<select><option>Todas las obras</option><option>Las Torres</option><option>Plaza Norte</option></select></label><label>Fecha inicio<input type="date" value="2024-11-01" /></label><label>Fecha fin<input type="date" value="2024-11-30" /></label><label>Período<select><option>Noviembre 2024</option><option>Q3 2024</option><option>2024</option></select></label></div></article>
+          <section class="report-grid">@for (reporte of reportesDisponibles; track reporte.nombre) {<article class="panel report-card"><div class="report-icon">R</div><h2>{{ reporte.nombre }}</h2><p>{{ reporte.detalle }}</p><footer><button class="ghost-button">Previsualizar</button><button class="pdf-button">PDF</button><button class="excel-button">Excel</button></footer></article>}</section>
+          }
+        } @else if (vista() === 'usuarios') {
+          <section class="page-heading"><div><h1>Usuarios y roles</h1><p>Gestión de accesos y permisos</p></div><button class="primary-button">+ Nuevo usuario</button></section>
+          <article class="panel table-panel module-screen-panel"><div class="module-tabs"><button class="active">Usuarios</button><button>Roles</button><button>Matriz de permisos</button></div><table><thead><tr><th>Usuario</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>@for (usuario of usuariosSistema; track usuario.correo) {<tr><td class="person-cell"><img [src]="usuario.foto" [alt]="usuario.nombre"/><strong>{{ usuario.nombre }}</strong></td><td>{{ usuario.correo }}</td><td><span class="role-chip">{{ usuario.rol }}</span></td><td><span class="status activo">{{ usuario.estado }}</span></td><td class="actions icon-actions"><button aria-label="Editar usuario" [innerHTML]="iconoSvg('edit')"></button><button aria-label="Eliminar usuario" [innerHTML]="iconoSvg('trash')"></button></td></tr>}</tbody></table></article>
+        } @else if (vista() === 'configuracion') {
+          <section class="page-heading"><div><h1>Configuración</h1><p>Ajusta las preferencias del sistema</p></div><button class="primary-button">Guardar cambios</button></section>
+          <section class="settings-layout"><nav class="panel settings-nav"><button class="active">Empresa</button><button>Moneda e impuestos</button><button>Apariencia</button><button>Categorías</button><button>Notificaciones</button><button>Copias de seguridad</button></nav><article class="panel settings-panel"><h2>Información de la empresa</h2><div class="settings-form"><button class="logo-upload" aria-label="Cargar logo"><span>Logo</span></button><label>Nombre de la empresa<input value="Constructora Peruana S.A.C." /></label><label>RUC<input value="20512345678" /></label><label>Dirección<input placeholder="Dirección" /></label><label>Teléfono<input placeholder="Teléfono" /></label><label>Correo de contacto<input placeholder="Correo de contacto" /></label><label>Página web<input placeholder="Página web" /></label></div></article></section>
+        } @else {
+          <section class="page-heading"><div><h1>{{ etiquetaVista() }}</h1><p>{{ descripcionVista() }}</p></div></section>
+        }
+      </section>
+    </section>
+
+    @if (modalActivo()) {
+      <section class="modal-backdrop">
+        <article class="modal" [class.payroll-modal]="modalActivo() === 'planilla' || modalActivo() === 'planilla-detalle'" [class.delete-modal]="modalActivo() === 'eliminar-obra' || modalActivo() === 'confirmar-eliminar'" (click)="$event.stopPropagation()">
+          @if (modalActivo() === 'eliminar-obra' && obraEliminando()) {
+            <h2>Eliminar obra</h2>
+            <section class="delete-work-dialog">
+              <header>
+                <span class="delete-icon" [innerHTML]="iconoSvg('trash')"></span>
+                <div>
+                  <strong>{{ obraEliminando()!.nombre }}</strong>
+                  <small>{{ obraEliminando()!.codigo }} - {{ obraEliminando()!.ubicacion }}</small>
+                </div>
+              </header>
+
+              @if (resumenEliminacionObra().puedeEliminar) {
+                <p class="delete-work-message success">
+                  Esta obra no tiene planillas, gastos ni ingresos asociados. Puedes eliminarla definitivamente.
+                </p>
+              } @else {
+                <p class="delete-work-message danger">
+                  No se puede eliminar porque la obra tiene historial operativo y financiero. Para conservar la trazabilidad, marca la obra como Finalizada.
+                </p>
+              }
+
+              <div class="delete-work-summary">
+                <article>
+                  <span>Planillas</span>
+                  <strong>{{ resumenEliminacionObra().planillasCantidad }}</strong>
+                  <small>{{ formatoMoneda(resumenEliminacionObra().planillasTotal) }}</small>
+                </article>
+                <article>
+                  <span>Gastos</span>
+                  <strong>{{ resumenEliminacionObra().gastosCantidad }}</strong>
+                  <small>{{ formatoMoneda(resumenEliminacionObra().gastosTotal) }}</small>
+                </article>
+                <article>
+                  <span>Ingresos</span>
+                  <strong>{{ resumenEliminacionObra().ingresosCantidad }}</strong>
+                  <small>{{ formatoMoneda(resumenEliminacionObra().ingresosTotal) }}</small>
+                </article>
+              </div>
+
+              @if (resumenEliminacionObra().otrosRegistros > 0) {
+                <p class="delete-work-note">
+                  Adem&aacute;s existen {{ resumenEliminacionObra().otrosRegistros }} registros operativos asociados.
+                </p>
+              }
+
+              <footer class="modal-actions">
+                <button type="button" class="ghost-button" (click)="cerrarModal()">{{ resumenEliminacionObra().puedeEliminar ? 'Cancelar' : 'Cerrar' }}</button>
+                @if (resumenEliminacionObra().puedeEliminar) {
+                  <button type="button" class="danger-button" (click)="confirmarEliminarObra()">Eliminar definitivamente</button>
+                }
+              </footer>
+            </section>
+          } @else if (modalActivo() === 'confirmar-eliminar' && confirmacionEliminar()) {
+            <h2>{{ confirmacionEliminar()!.titulo }}</h2>
+            <section class="delete-work-dialog generic-delete-dialog">
+              <header>
+                <span class="delete-icon" [innerHTML]="iconoSvg('trash')"></span>
+                <div>
+                  <strong>{{ confirmacionEliminar()!.elemento }}</strong>
+                  @if (confirmacionEliminar()!.detalle) {
+                    <small>{{ confirmacionEliminar()!.detalle }}</small>
+                  }
+                </div>
+              </header>
+
+              <p class="delete-work-message danger">
+                {{ confirmacionEliminar()!.advertencia }}
+              </p>
+
+              <footer class="modal-actions">
+                <button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button>
+                <button type="button" class="danger-button" (click)="confirmarEliminacion()">{{ confirmacionEliminar()!.confirmarTexto }}</button>
+              </footer>
+            </section>
+          } @else if (modalActivo() === 'obra') {
+            <h2>{{ obraEditandoId() ? 'Editar obra' : 'Nueva obra' }}</h2>
+            <form [formGroup]="obraForm" (ngSubmit)="guardarObra()" class="form-grid">
+              <label>Codigo<input formControlName="codigo" /><small class="field-warning">{{ advertenciaCampo(obraForm, 'codigo') }}</small></label>
+              <label>Nombre<input formControlName="nombre" /><small class="field-warning">{{ advertenciaCampo(obraForm, 'nombre') }}</small></label>
+              <label>Cliente<select formControlName="cliente"><option value="" disabled>Seleccionar cliente</option>@for (cliente of clientesActivos(); track cliente.id) {<option [value]="nombreCliente(cliente)">{{ nombreCliente(cliente) }}</option>}</select><small class="field-warning">{{ advertenciaCampo(obraForm, 'cliente', 'select') }}</small></label>
+              <label>Ubicacion<input formControlName="ubicacion" /><small class="field-warning">{{ advertenciaCampo(obraForm, 'ubicacion') }}</small></label>
+              <label>Presupuesto<input type="number" formControlName="presupuesto" /><small class="field-warning">{{ advertenciaCampo(obraForm, 'presupuesto') }}</small></label>
+              <label>Avance<input type="number" formControlName="avance" /><small class="field-warning">{{ advertenciaCampo(obraForm, 'avance') }}</small></label>
+              <div class="form-state-field"><span>Estado</span><button type="button" class="state-toggle form-state-toggle" [class.active]="obraForm.controls.estado.value === 'en_ejecucion'" [class.inactive]="obraForm.controls.estado.value === 'finalizada'" [attr.aria-pressed]="obraForm.controls.estado.value === 'en_ejecucion'" (click)="alternarEstadoObraFormulario()"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ obraForm.controls.estado.value === 'finalizada' ? 'Finalizada' : 'Activa' }}</span></button></div>
+              <label>Inicio<input type="date" formControlName="fechaInicio" /><small class="field-warning">{{ advertenciaCampo(obraForm, 'fechaInicio') }}</small></label>
+              <label>Fin estimado<input type="date" formControlName="fechaFin" /><small class="field-warning">{{ advertenciaCampo(obraForm, 'fechaFin') }}</small></label>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ obraEditandoId() ? 'Guardar cambios' : 'Guardar obra' }}</button></footer>
+            </form>
+          } @else if (modalActivo() === 'trabajador') {
+            <h2>{{ trabajadorEditandoId() ? 'Editar trabajador' : 'Nuevo trabajador' }}</h2>
+            <form [formGroup]="trabajadorForm" (ngSubmit)="guardarTrabajador()" class="form-grid">
+              <label>Nombres<input formControlName="nombres" /><small class="field-warning">{{ advertenciaCampo(trabajadorForm, 'nombres') }}</small></label>
+              <label>Apellidos<input formControlName="apellidos" /><small class="field-warning">{{ advertenciaCampo(trabajadorForm, 'apellidos') }}</small></label>
+              <label>DNI<input formControlName="dni" maxlength="8" /><small class="field-warning">{{ advertenciaCampo(trabajadorForm, 'dni') }}</small></label>
+              <label>Cargo<select formControlName="cargo"><option value="" disabled>Seleccionar cargo</option>@for (cargo of cargosTrabajador(); track cargo.codigo) {<option [value]="cargo.codigo">{{ cargo.nombre }}</option>}</select><small class="field-warning">{{ advertenciaCampo(trabajadorForm, 'cargo', 'select') }}</small></label>
+              <div class="form-state-field">
+                <span>Estado</span>
+                <button
+                  type="button"
+                  class="state-toggle form-state-toggle"
+                  [class.active]="trabajadorForm.controls.estado.value === 'activo'"
+                  [class.inactive]="trabajadorForm.controls.estado.value === 'inactivo'"
+                  [attr.aria-pressed]="trabajadorForm.controls.estado.value === 'activo'"
+                  (click)="alternarEstadoFormulario('trabajador')"
+                >
+                  <span class="state-toggle-track"><span class="state-toggle-thumb"></span></span>
+                  <span>{{ estadoObraEtiqueta(trabajadorForm.controls.estado.value) }}</span>
+                </button>
+              </div>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ trabajadorEditandoId() ? 'Actualizar' : 'Guardar' }}</button></footer>
+            </form>
+          } @else if (modalActivo() === 'cargo') {
+            <h2>{{ cargoEditandoId() ? 'Editar cargo' : 'Nuevo cargo' }}</h2>
+            <form [formGroup]="cargoForm" (ngSubmit)="guardarCargo()" class="form-grid">
+              <label>Nombre del cargo<input formControlName="nombre" /><small class="field-warning">{{ advertenciaCampo(cargoForm, 'nombre') }}</small></label>
+              <label>Sueldo<input type="number" formControlName="sueldo" min="0" step="0.01" /><small class="field-warning">{{ advertenciaCampo(cargoForm, 'sueldo') }}</small></label>
+              <div class="form-state-field">
+                <span>Estado</span>
+                <button
+                  type="button"
+                  class="state-toggle form-state-toggle"
+                  [class.active]="cargoForm.controls.estado.value === 'activo'"
+                  [class.inactive]="cargoForm.controls.estado.value === 'inactivo'"
+                  [attr.aria-pressed]="cargoForm.controls.estado.value === 'activo'"
+                  (click)="alternarEstadoFormulario('cargo')"
+                >
+                  <span class="state-toggle-track"><span class="state-toggle-thumb"></span></span>
+                  <span>{{ estadoObraEtiqueta(cargoForm.controls.estado.value) }}</span>
+                </button>
+              </div>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ cargoEditandoId() ? 'Actualizar' : 'Guardar' }}</button></footer>
+            </form>
+          } @else if (modalActivo() === 'cliente') {
+            <h2>{{ clienteEditandoId() ? 'Editar cliente' : 'Nuevo cliente' }}</h2>
+            <form [formGroup]="clienteForm" (ngSubmit)="guardarCliente()" class="form-grid">
+              <label>Nombres<input formControlName="nombres" required /><small class="field-warning">{{ advertenciaCampo(clienteForm, 'nombres') }}</small></label>
+              <label>Apellidos<input formControlName="apellidos" required /><small class="field-warning">{{ advertenciaCampo(clienteForm, 'apellidos') }}</small></label>
+              <label>Telefono<input formControlName="telefono" required /><small class="field-warning">{{ advertenciaCampo(clienteForm, 'telefono') }}</small></label>
+              <label>Direccion <input formControlName="direccion" /></label>
+              <div class="form-state-field"><span>Estado</span><button type="button" class="state-toggle form-state-toggle" [class.active]="clienteForm.controls.estado.value === 'activo'" [class.inactive]="clienteForm.controls.estado.value === 'inactivo'" (click)="alternarEstadoCatalogoFormulario('cliente')"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ estadoObraEtiqueta(clienteForm.controls.estado.value) }}</span></button></div>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ clienteEditandoId() ? 'Actualizar' : 'Guardar' }}</button></footer>
+            </form>
+          } @else if (modalActivo() === 'categoria-gasto') {
+            <h2>{{ categoriaGastoEditandoId() ? 'Editar categoria de gasto' : 'Nueva categoria de gasto' }}</h2>
+            <form [formGroup]="categoriaGastoForm" (ngSubmit)="guardarCategoriaGasto()" class="form-grid">
+              <label>Nombre<input formControlName="nombre" /><small class="field-warning">{{ advertenciaCampo(categoriaGastoForm, 'nombre') }}</small></label>
+              <div class="form-state-field"><span>Estado</span><button type="button" class="state-toggle form-state-toggle" [class.active]="categoriaGastoForm.controls.estado.value === 'activo'" [class.inactive]="categoriaGastoForm.controls.estado.value === 'inactivo'" (click)="alternarEstadoCatalogoFormulario('categoria-gasto')"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ estadoObraEtiqueta(categoriaGastoForm.controls.estado.value) }}</span></button></div>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ categoriaGastoEditandoId() ? 'Actualizar' : 'Guardar' }}</button></footer>
+            </form>
+          } @else if (modalActivo() === 'tipo-ingreso') {
+            <h2>{{ tipoIngresoEditandoId() ? 'Editar tipo de ingreso' : 'Nuevo tipo de ingreso' }}</h2>
+            <form [formGroup]="tipoIngresoForm" (ngSubmit)="guardarTipoIngreso()" class="form-grid">
+              <label>Nombre<input formControlName="nombre" /><small class="field-warning">{{ advertenciaCampo(tipoIngresoForm, 'nombre') }}</small></label>
+              <div class="form-state-field"><span>Estado</span><button type="button" class="state-toggle form-state-toggle" [class.active]="tipoIngresoForm.controls.estado.value === 'activo'" [class.inactive]="tipoIngresoForm.controls.estado.value === 'inactivo'" (click)="alternarEstadoCatalogoFormulario('tipo-ingreso')"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ estadoObraEtiqueta(tipoIngresoForm.controls.estado.value) }}</span></button></div>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ tipoIngresoEditandoId() ? 'Actualizar' : 'Guardar' }}</button></footer>
+            </form>
+          } @else if (modalActivo() === 'planilla') {
+            <h2>{{ planillaEditandoId() ? 'Editar planilla semanal' : 'Generar planilla semanal' }}</h2>
+            <form [formGroup]="planillaForm" (ngSubmit)="guardarPlanilla()" class="form-grid payroll-form">
+              <label>Obra
+                <select formControlName="obraId">
+                  @for (obra of datos.obras(); track obra.id) {<option [value]="obra.id">{{ obra.nombre }}</option>}
+                </select>
+                <small class="field-warning">{{ advertenciaCampo(planillaForm, 'obraId', 'select') }}</small>
+              </label>
+              <label>Fecha de inicio<input type="date" formControlName="fechaInicio" (change)="actualizarRangoPlanilla()" /><small class="field-warning">{{ advertenciaCampo(planillaForm, 'fechaInicio') }}</small></label>
+              <label>Fecha fin<input type="date" formControlName="fechaFin" (change)="actualizarRangoPlanilla()" /><small class="field-warning">{{ advertenciaCampo(planillaForm, 'fechaFin') }}</small></label>
+              <section class="payroll-summary span-2">
+                <article><span>Días del período</span><strong>{{ diasMaximosPlanilla() }}</strong></article>
+                <article><span>Trabajadores incluidos</span><strong>{{ trabajadoresIncluidosPlanilla() }}</strong></article>
+                <article><span>Total estimado</span><strong class="green-text">{{ formatoMoneda(totalPlanillaPreview()) }}</strong></article>
+              </section>
+              <section class="payroll-worker-editor span-2">
+                <header>
+                  <h3>Días trabajados por trabajador</h3>
+                  <p>Sueldo semanal calculado sobre 6 días. Hora extra calculada como sueldo diario / 8</p>
+                </header>
+                <div class="payroll-worker-table">
+                  <table>
+                    <thead><tr><th>Trabajador</th><th>Cargo</th><th>Sueldo</th><th>Días</th><th>H. extras</th><th>Subtotal</th></tr></thead>
+                    <tbody>
+                      @for (trabajador of trabajadoresPlanilla(); track trabajador.id) {
+                        <tr>
+                          <td><strong>{{ trabajador.nombres }} {{ trabajador.apellidos }}</strong><small>DNI {{ trabajador.dni }}</small></td>
+                          <td>{{ cargoTrabajadorEtiqueta(trabajador.cargo) }}</td>
+                          <td class="money">{{ formatoMoneda(trabajador.sueldo) }}</td>
+                          <td><input type="number" min="0" [max]="limiteDiasPlanilla" step="0.5" [value]="diasTrabajadorPlanilla(trabajador.id)" (input)="actualizarDiasPlanilla(trabajador.id, $any($event.target).value)" /></td>
+                          <td><input type="number" min="0" max="72" step="0.5" [value]="horasExtrasTrabajadorPlanilla(trabajador.id)" (input)="actualizarHorasExtrasPlanilla(trabajador.id, $any($event.target).value)" /></td>
+                          <td class="money">{{ formatoMoneda(subtotalPlanillaTrabajador(trabajador, diasTrabajadorPlanilla(trabajador.id), horasExtrasTrabajadorPlanilla(trabajador.id))) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ planillaEditandoId() ? 'Actualizar planilla' : 'Guardar planilla' }}</button></footer>
+            </form>
+          } @else if (modalActivo() === 'planilla-detalle' && planillaDetalle()) {
+            <h2>Detalle de planilla</h2>
+            <section class="payroll-detail-summary">
+              <article><span>Período</span><strong>{{ planillaDetalle()!.planilla.periodo }}</strong></article>
+              <article><span>Obra</span><strong>{{ planillaDetalle()!.planilla.obra }}</strong></article>
+              <article><span>Estado</span><strong>{{ estadoPlanillaEtiqueta(planillaDetalle()!.planilla) }}</strong></article>
+              <article><span>Total</span><strong class="green-text">{{ formatoMoneda(planillaDetalle()!.planilla.total) }}</strong></article>
+            </section>
+            <section class="payroll-worker-editor payroll-detail-table">
+              <header>
+                <h3>Trabajadores incluidos</h3>
+                <p>{{ planillaDetalle()!.planilla.fechaInicio }} - {{ planillaDetalle()!.planilla.fechaFin }}</p>
+              </header>
+              @if (planillaDetalle()!.detalles.length) {
+                <div class="payroll-worker-table">
+                  <table>
+                    <thead><tr><th>Trabajador</th><th>Cargo</th><th>Días</th><th>H. extras</th><th>Sueldo base</th><th>Pago extras</th><th>Subtotal</th></tr></thead>
+                    <tbody>
+                      @for (detalle of planillaDetalle()!.detalles; track detalle.trabajadorId) {
+                        <tr>
+                          <td><strong>{{ detalle.trabajador }}</strong></td>
+                          <td>{{ cargoTrabajadorEtiqueta(detalle.cargo) }}</td>
+                          <td>{{ detalle.diasTrabajados }}</td>
+                          <td>{{ detalle.horasExtras }}</td>
+                          <td class="money">{{ formatoMoneda(detalle.sueldoBase) }}</td>
+                          <td class="money">{{ formatoMoneda(detalle.pagoHorasExtras) }}</td>
+                          <td class="money">{{ formatoMoneda(detalle.subtotal) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <p class="empty-payroll-detail">Esta planilla no tiene detalle de trabajadores registrado.</p>
+              }
+            </section>
+            <footer class="modal-actions"><button type="button" class="ghost-button" (click)="exportarPlanillaDetallePdf()">Exportar PDF</button><button type="button" class="primary-button" (click)="cerrarModal()">Cerrar</button></footer>
+          } @else if (modalActivo() === 'gasto') {
+            <h2>{{ gastoEditandoId() ? 'Editar gasto' : 'Registrar gasto' }}</h2>
+            <form [formGroup]="gastoForm" (ngSubmit)="guardarGasto()" class="form-grid">
+              <label class="span-2">Descripcion<input formControlName="descripcion" /><small class="field-warning">{{ advertenciaCampo(gastoForm, 'descripcion') }}</small></label>
+              <label>Obra<select formControlName="obraId"><option [ngValue]="null" disabled>Selecciona una obra</option>@for (obra of datos.obras(); track obra.id) {<option [ngValue]="obra.id">{{ obra.nombre }}</option>}</select><small class="field-warning">{{ advertenciaCampo(gastoForm, 'obraId', 'select') }}</small></label>
+              <label>Categoria<select formControlName="categoria"><option value="" disabled>Selecciona una categoria</option>@for (categoria of categoriasGasto(); track categoria.id) {<option [value]="categoria.nombre">{{ categoria.nombre }}</option>}</select><small class="field-warning">{{ advertenciaCampo(gastoForm, 'categoria', 'select') }}</small></label>
+              <label>Monto<input type="number" min="0.01" step="0.01" formControlName="monto" /><small class="field-warning">{{ advertenciaCampo(gastoForm, 'monto') }}</small></label>
+              <label>Fecha<input type="date" formControlName="fecha" /><small class="field-warning">{{ advertenciaCampo(gastoForm, 'fecha') }}</small></label>
+              <label class="form-state-field">Estado<button type="button" class="state-toggle form-state-toggle" [class.active]="gastoForm.controls.estado.value === 'pagado'" [class.inactive]="gastoForm.controls.estado.value === 'pendiente'" [attr.aria-pressed]="gastoForm.controls.estado.value === 'pagado'" (click)="alternarEstadoGastoFormulario()"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ gastoForm.controls.estado.value === 'pagado' ? 'Pagado' : 'Pendiente' }}</span></button></label>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ gastoEditandoId() ? 'Guardar cambios' : 'Guardar gasto' }}</button></footer>
+            </form>
+          } @else if (modalActivo() === 'ingreso') {
+            <h2>{{ ingresoEditandoId() ? 'Editar ingreso' : 'Registrar ingreso' }}</h2>
+            <form [formGroup]="ingresoForm" (ngSubmit)="guardarIngreso()" class="form-grid">
+              <label>Obra<select formControlName="obraId" (change)="seleccionarObraIngresoFormulario($any($event.target).value)"><option [ngValue]="null" disabled>Selecciona una obra</option>@for (obra of datos.obras(); track obra.id) {<option [ngValue]="obra.id">{{ obra.nombre }}</option>}</select><small class="field-warning">{{ advertenciaCampo(ingresoForm, 'obraId', 'select') }}</small></label>
+              <label>Cliente<select formControlName="cliente"><option value="" disabled>Selecciona un cliente</option>@for (cliente of clientesActivos(); track cliente.id) {<option [value]="nombreCliente(cliente)">{{ nombreCliente(cliente) }}</option>}</select><small class="field-warning">{{ advertenciaCampo(ingresoForm, 'cliente', 'select') }}</small></label>
+              <label>Tipo<select formControlName="tipo"><option value="" disabled>Selecciona un tipo</option>@for (tipo of tiposIngreso(); track tipo.id) {<option [value]="tipo.nombre">{{ tipo.nombre }}</option>}</select><small class="field-warning">{{ advertenciaCampo(ingresoForm, 'tipo', 'select') }}</small></label>
+              <label>Monto<input type="number" min="0.01" step="0.01" formControlName="monto" /><small class="field-warning">{{ advertenciaCampo(ingresoForm, 'monto') }}</small></label>
+              <label>Fecha<input type="date" formControlName="fecha" /><small class="field-warning">{{ advertenciaCampo(ingresoForm, 'fecha') }}</small></label>
+              <label class="form-state-field">Estado<button type="button" class="state-toggle form-state-toggle" [class.active]="ingresoForm.controls.estado.value === 'pagado'" [class.inactive]="ingresoForm.controls.estado.value === 'pendiente'" [attr.aria-pressed]="ingresoForm.controls.estado.value === 'pagado'" (click)="alternarEstadoIngresoFormulario()"><span class="state-toggle-track"><span class="state-toggle-thumb"></span></span><span>{{ ingresoForm.controls.estado.value === 'pagado' ? 'Pagado' : 'Pendiente' }}</span></button></label>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ ingresoEditandoId() ? 'Guardar cambios' : 'Guardar ingreso' }}</button></footer>
+            </form>
+          } @else {
+            <h2>Registrar compra</h2>
+            <form [formGroup]="compraForm" (ngSubmit)="guardarCompra()" class="form-grid">
+              <label>Material<select formControlName="materialId">@for (material of datos.materiales(); track material.id) {<option [value]="material.id">{{ material.nombre }}</option>}</select><small class="field-warning">{{ advertenciaCampo(compraForm, 'materialId', 'select') }}</small></label>
+              <label>Cantidad<input type="number" formControlName="cantidad" /><small class="field-warning">{{ advertenciaCampo(compraForm, 'cantidad') }}</small></label>
+              <label>Precio unitario<input type="number" formControlName="precioUnitario" /><small class="field-warning">{{ advertenciaCampo(compraForm, 'precioUnitario') }}</small></label>
+              <label>Proveedor<input formControlName="proveedor" /><small class="field-warning">{{ advertenciaCampo(compraForm, 'proveedor') }}</small></label>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">Guardar</button></footer>
+            </form>
+          }
+        </article>
+      </section>
+    }
+  </main>

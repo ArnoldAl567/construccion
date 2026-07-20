@@ -1,0 +1,134 @@
+<main class="login-screen">
+  <section class="login-cover">
+    <div class="cover-overlay"></div>
+    <div class="login-brand">
+      <span class="logo-box" [innerHTML]="iconoSvg('helmet')"></span>
+      <div>
+        <strong>ConstructControl</strong>
+        <small>Plataforma de gestión de obras</small>
+      </div>
+    </div>
+
+    <div class="login-benefits" aria-label="Características de seguridad">
+      <article><strong>Seguro</strong><span>Credenciales protegidas</span></article>
+      <article><strong>Controlado</strong><span>Sesiones con vencimiento</span></article>
+      <article><strong>Centralizado</strong><span>Información en un solo lugar</span></article>
+    </div>
+
+    <div class="login-title">
+      <h1>Control total de tus obras de construcción</h1>
+      <p>Gestiona obras, trabajadores, planillas, ingresos, gastos y rentabilidad desde una sola plataforma.</p>
+    </div>
+  </section>
+
+  <section class="login-form-side">
+    <div class="login-card" [class.registration]="modoRegistro()">
+      <div class="auth-tabs" role="tablist" aria-label="Acceso a ConstructControl">
+        <button type="button" role="tab" [class.active]="!modoRegistro()" [attr.aria-selected]="!modoRegistro()" (click)="cambiarModo(false)">Iniciar sesión</button>
+        <button type="button" role="tab" [class.active]="modoRegistro()" [attr.aria-selected]="modoRegistro()" (click)="cambiarModo(true)">Crear cuenta</button>
+      </div>
+
+      @if (!modoRegistro()) {
+        <form [formGroup]="loginForm" (ngSubmit)="iniciarSesion()" novalidate>
+          <h2>Bienvenido</h2>
+          <p class="auth-subtitle">Ingresa tus credenciales para continuar</p>
+
+          <label>
+            Usuario o correo electrónico
+            <span class="input-shell" [class.invalid]="campoLoginInvalido('usuario')">
+              <i aria-hidden="true" [innerHTML]="iconoSvg('user')"></i>
+              <input type="text" formControlName="usuario" placeholder="Usuario o correo" autocomplete="username" />
+            </span>
+            @if (campoLoginInvalido('usuario')) { <small class="field-error">{{ mensajeCampoLogin('usuario') }}</small> }
+          </label>
+
+          <label>
+            Contraseña
+            <span class="input-shell" [class.invalid]="campoLoginInvalido('contrasena')">
+              <i aria-hidden="true" [innerHTML]="iconoSvg('lock')"></i>
+              <input [type]="mostrarContrasenaLogin() ? 'text' : 'password'" formControlName="contrasena" placeholder="••••••••" autocomplete="current-password" />
+              <button type="button" class="password-toggle" (click)="mostrarContrasenaLogin.set(!mostrarContrasenaLogin())" [attr.aria-label]="mostrarContrasenaLogin() ? 'Ocultar contraseña' : 'Mostrar contraseña'" [title]="mostrarContrasenaLogin() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                <span [innerHTML]="iconoSvg(mostrarContrasenaLogin() ? 'eyeOff' : 'eye')"></span>
+              </button>
+            </span>
+            @if (campoLoginInvalido('contrasena')) { <small class="field-error">{{ mensajeCampoLogin('contrasena') }}</small> }
+          </label>
+
+          <div class="login-options">
+            <label class="inline-check"><input type="checkbox" formControlName="recordar" /> Recordar sesión</label>
+            <button type="button" (click)="mostrarAyudaRecuperacion.set(!mostrarAyudaRecuperacion())">¿Olvidaste tu contraseña?</button>
+          </div>
+
+          @if (mostrarAyudaRecuperacion()) {
+            <div class="recovery-help" role="status">Solicita al administrador del sistema que restablezca tu contraseña.</div>
+          }
+          @if (mensaje()) {
+            <p class="login-message" [class.success]="tipoMensaje() === 'success'" [class.info]="tipoMensaje() === 'info'">{{ mensaje() }}</p>
+          }
+          <button type="submit" class="primary-button full" [disabled]="cargando()">
+            {{ cargando() ? 'Ingresando...' : 'Iniciar sesión' }} <span aria-hidden="true">→</span>
+          </button>
+        </form>
+      } @else {
+        <form [formGroup]="registroForm" (ngSubmit)="crearCuenta()" novalidate>
+          <h2>Crear cuenta</h2>
+          <p class="auth-subtitle">Registra tus credenciales de acceso</p>
+
+          <label>
+            Nombre completo
+            <span class="input-shell" [class.invalid]="campoRegistroInvalido('nombre') || erroresRegistro()['nombre']">
+              <i aria-hidden="true" [innerHTML]="iconoSvg('user')"></i>
+              <input type="text" formControlName="nombre" placeholder="Nombres y apellidos" autocomplete="name" />
+            </span>
+            @if (campoRegistroInvalido('nombre') || erroresRegistro()['nombre']) { <small class="field-error">{{ mensajeCampoRegistro('nombre') }}</small> }
+          </label>
+
+          <label>
+            Usuario
+            <span class="input-shell" [class.invalid]="campoRegistroInvalido('usuario') || erroresRegistro()['usuario']">
+              <i aria-hidden="true" [innerHTML]="iconoSvg('user')"></i>
+              <input type="text" formControlName="usuario" placeholder="Nombre de usuario" autocomplete="username" />
+            </span>
+            @if (campoRegistroInvalido('usuario') || erroresRegistro()['usuario']) { <small class="field-error">{{ mensajeCampoRegistro('usuario') }}</small> }
+          </label>
+
+          <label>
+            Correo electrónico
+            <span class="input-shell" [class.invalid]="campoRegistroInvalido('correo') || erroresRegistro()['correo']">
+              <i aria-hidden="true" [innerHTML]="iconoSvg('mail')"></i>
+              <input type="email" formControlName="correo" placeholder="usuario@empresa.com" autocomplete="email" />
+            </span>
+            @if (campoRegistroInvalido('correo') || erroresRegistro()['correo']) { <small class="field-error">{{ mensajeCampoRegistro('correo') }}</small> }
+          </label>
+
+          <label>
+            Contraseña
+            <span class="input-shell" [class.invalid]="campoRegistroInvalido('contrasena') || erroresRegistro()['contrasena']">
+              <i aria-hidden="true" [innerHTML]="iconoSvg('lock')"></i>
+              <input [type]="mostrarContrasenaRegistro() ? 'text' : 'password'" formControlName="contrasena" placeholder="••••••••" autocomplete="new-password" />
+              <button type="button" class="password-toggle" (click)="mostrarContrasenaRegistro.set(!mostrarContrasenaRegistro())" [attr.aria-label]="mostrarContrasenaRegistro() ? 'Ocultar contraseña' : 'Mostrar contraseña'" [title]="mostrarContrasenaRegistro() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                <span [innerHTML]="iconoSvg(mostrarContrasenaRegistro() ? 'eyeOff' : 'eye')"></span>
+              </button>
+            </span>
+            @if (campoRegistroInvalido('contrasena') || erroresRegistro()['contrasena']) { <small class="field-error">{{ mensajeCampoRegistro('contrasena') }}</small> }
+          </label>
+
+          <label>
+            Confirmar contraseña
+            <span class="input-shell" [class.invalid]="campoRegistroInvalido('confirmacionContrasena')">
+              <i aria-hidden="true" [innerHTML]="iconoSvg('lock')"></i>
+              <input [type]="mostrarConfirmacion() ? 'text' : 'password'" formControlName="confirmacionContrasena" placeholder="••••••••" autocomplete="new-password" />
+              <button type="button" class="password-toggle" (click)="mostrarConfirmacion.set(!mostrarConfirmacion())" [attr.aria-label]="mostrarConfirmacion() ? 'Ocultar contraseña' : 'Mostrar contraseña'" [title]="mostrarConfirmacion() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                <span [innerHTML]="iconoSvg(mostrarConfirmacion() ? 'eyeOff' : 'eye')"></span>
+              </button>
+            </span>
+            @if (campoRegistroInvalido('confirmacionContrasena')) { <small class="field-error">{{ mensajeCampoRegistro('confirmacionContrasena') }}</small> }
+          </label>
+
+          @if (mensaje()) { <p class="login-message">{{ mensaje() }}</p> }
+          <button type="submit" class="primary-button full" [disabled]="cargando()">{{ cargando() ? 'Creando cuenta...' : 'Crear cuenta' }}</button>
+        </form>
+      }
+    </div>
+  </section>
+</main>

@@ -1,0 +1,11 @@
+@import './app/app.css';
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f5f7fb;
+}

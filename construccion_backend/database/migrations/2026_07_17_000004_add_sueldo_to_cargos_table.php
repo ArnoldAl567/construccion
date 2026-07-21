@@ -26,9 +26,17 @@ return new class extends Migration
             ]);
         }
 
-        DB::statement(
-            'UPDATE trabajadores SET sueldo = cargos.sueldo, updated_at = NOW() FROM cargos WHERE trabajadores.cargo = cargos.codigo'
-        );
+        DB::table('cargos')
+            ->select(['codigo', 'sueldo'])
+            ->get()
+            ->each(function (object $cargo): void {
+                DB::table('trabajadores')
+                    ->where('cargo', $cargo->codigo)
+                    ->update([
+                        'sueldo' => $cargo->sueldo,
+                        'updated_at' => now(),
+                    ]);
+            });
     }
 
     public function down(): void

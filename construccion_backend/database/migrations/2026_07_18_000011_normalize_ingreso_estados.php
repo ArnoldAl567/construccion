@@ -7,17 +7,37 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE ingresos DROP CONSTRAINT IF EXISTS ingresos_estado_check');
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            [$table, $constraint] = $this->postgresIdentifiers('ingresos', 'ingresos_estado_check');
+
+            DB::statement("ALTER TABLE {$table} DROP CONSTRAINT IF EXISTS {$constraint}");
+        }
 
         DB::table('ingresos')
             ->whereNotIn('estado', ['pendiente', 'pagado'])
             ->update(['estado' => 'pendiente', 'updated_at' => now()]);
 
-        DB::statement("ALTER TABLE ingresos ADD CONSTRAINT ingresos_estado_check CHECK (estado IN ('pendiente', 'pagado'))");
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            [$table, $constraint] = $this->postgresIdentifiers('ingresos', 'ingresos_estado_check');
+
+            DB::statement("ALTER TABLE {$table} ADD CONSTRAINT {$constraint} CHECK (estado IN ('pendiente', 'pagado'))");
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE ingresos DROP CONSTRAINT IF EXISTS ingresos_estado_check');
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            [$table, $constraint] = $this->postgresIdentifiers('ingresos', 'ingresos_estado_check');
+
+            DB::statement("ALTER TABLE {$table} DROP CONSTRAINT IF EXISTS {$constraint}");
+        }
+    }
+
+    private function postgresIdentifiers(string $table, string $constraint): array
+    {
+        $prefix = DB::connection()->getTablePrefix();
+        $quote = static fn (string $identifier): string => '"'.str_replace('"', '""', $identifier).'"';
+
+        return [$quote($prefix.$table), $quote($prefix.$constraint)];
     }
 };

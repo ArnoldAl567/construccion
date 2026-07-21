@@ -3,7 +3,7 @@
 El repositorio se despliega como dos servicios conectados:
 
 - `construccion_frontend`: Angular en Vercel.
-- `construccion_backend`: Laravel y PostgreSQL en Render.
+- `construccion_backend`: Laravel en Render, conectado al PostgreSQL compartido de Production.
 
 ## 1. Crear el backend en Render
 
@@ -14,16 +14,17 @@ El repositorio se despliega como dos servicios conectados:
    ```
 
 2. En Render selecciona **New > Blueprint** y conecta el repositorio de GitHub.
-3. Render detectara `render.yaml` y creara el servicio web y PostgreSQL.
+3. Render detectara `render.yaml` y creara el servicio web.
 4. Completa las variables solicitadas:
 
    - `APP_KEY`: la clave generada en el primer paso, incluido el prefijo `base64:`.
    - `APP_URL`: la URL HTTPS asignada al backend, sin `/api/v1`.
    - `CORS_ALLOWED_ORIGINS`: la URL HTTPS exacta del frontend. Se pueden indicar varias separadas por comas.
+   - `DB_URL`: la URL interna de `sistema-presupuesto-db`.
 
-El contenedor ejecuta las migraciones pendientes antes de iniciar Apache. La comprobacion de salud queda disponible en `APP_URL/up`.
+El servicio usa el prefijo `construct_control_` para mantener sus tablas aisladas dentro de la base compartida. El contenedor ejecuta las migraciones pendientes antes de iniciar Apache. La comprobacion de salud queda disponible en `APP_URL/up`.
 
-> El plan gratuito de PostgreSQL en Render expira a los 30 dias. Antes de registrar informacion real cambia la base de datos a `basic-256mb` o un plan superior.
+> Antes de registrar informacion real cambia PostgreSQL a un plan persistente y configura copias de seguridad.
 
 ## 2. Crear el frontend en Vercel
 
@@ -46,7 +47,7 @@ https://construct-control.vercel.app
 
 ## 3. Base de datos inicial
 
-La base de datos nueva empieza vacia. Crea la primera cuenta desde la pantalla de registro del login. No ejecutes `php artisan db:seed` sobre una base con informacion real porque el seeder de demostracion reinicia las tablas.
+Las tablas con prefijo `construct_control_` empiezan vacias. Crea la primera cuenta desde la pantalla de registro del login. No ejecutes `php artisan db:seed` sobre una base con informacion real porque el seeder de demostracion reinicia las tablas.
 
 ## 4. Verificacion
 

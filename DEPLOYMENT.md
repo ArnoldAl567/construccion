@@ -3,7 +3,7 @@
 El repositorio se despliega como dos servicios conectados:
 
 - `construccion_frontend`: Angular en Vercel.
-- `construccion_backend`: Laravel en Render, conectado al PostgreSQL compartido de Production.
+- `construccion_backend`: Laravel en Render, conectado a una base PostgreSQL exclusiva en Neon.
 
 ## 1. Crear el backend en Render
 
@@ -20,11 +20,11 @@ El repositorio se despliega como dos servicios conectados:
    - `APP_KEY`: la clave generada en el primer paso, incluido el prefijo `base64:`.
    - `APP_URL`: la URL HTTPS asignada al backend, sin `/api/v1`.
    - `CORS_ALLOWED_ORIGINS`: la URL HTTPS exacta del frontend. Se pueden indicar varias separadas por comas.
-   - `DB_URL`: la URL interna de `sistema-presupuesto-db`.
+   - `DB_URL`: la cadena de conexion de Neon, incluida la opcion `sslmode=require`.
 
-El servicio usa el prefijo `construct_control_` para mantener sus tablas aisladas dentro de la base compartida. El contenedor ejecuta las migraciones pendientes antes de iniciar Apache. La comprobacion de salud queda disponible en `APP_URL/up`.
+No configures `DB_PREFIX`: ConstructControl usa una base Neon exclusiva y sus tablas no se mezclan con otros sistemas. El contenedor ejecuta las migraciones pendientes antes de iniciar Apache. La comprobacion de salud queda disponible en `APP_URL/up`.
 
-> Antes de registrar informacion real cambia PostgreSQL a un plan persistente y configura copias de seguridad.
+> El plan gratuito de Neon puede suspender la base cuando no hay actividad, por lo que la primera peticion puede tardar algunos segundos. Para produccion critica configura copias de seguridad y evalua un plan con mayor disponibilidad.
 
 ## 2. Crear el frontend en Vercel
 
@@ -47,7 +47,7 @@ https://construct-control.vercel.app
 
 ## 3. Base de datos inicial
 
-Las tablas con prefijo `construct_control_` empiezan vacias. Crea la primera cuenta desde la pantalla de registro del login. No ejecutes `php artisan db:seed` sobre una base con informacion real porque el seeder de demostracion reinicia las tablas.
+En una instalacion nueva, el despliegue crea las tablas mediante las migraciones de Laravel. Crea la primera cuenta desde la pantalla de registro del login. No ejecutes `php artisan db:seed` sobre una base con informacion real porque el seeder de demostracion reinicia las tablas.
 
 ## 4. Verificacion
 

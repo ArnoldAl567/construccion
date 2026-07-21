@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: construct-control-api-arnold
+    name: construct-control-api-production
     runtime: docker
     plan: free
     region: oregon
@@ -25,10 +25,8 @@ services:
         value: pgsql
       - key: DB_URL
         sync: false
-      - key: DB_PREFIX
-        value: construct_control_
       - key: DB_SSLMODE
-        value: prefer
+        value: require
       - key: SESSION_DRIVER
         value: database
       - key: SESSION_LIFETIME

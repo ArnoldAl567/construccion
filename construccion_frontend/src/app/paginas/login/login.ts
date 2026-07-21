@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { switchMap } from 'rxjs';
 import { AutenticacionService } from '../../nucleo/servicios/autenticacion.service';
 
 type CampoLogin = 'usuario' | 'contrasena';
@@ -60,6 +61,7 @@ export class LoginComponent {
   readonly tipoMensaje = signal<'error' | 'success' | 'info'>('error');
   readonly erroresRegistro = signal<Record<string, string>>({});
   readonly cargando = signal(false);
+  readonly activandoServidor = signal(false);
 
   readonly loginForm = this.fb.nonNullable.group({
     usuario: ['', [Validators.required]],
@@ -93,16 +95,30 @@ export class LoginComponent {
 
     const { usuario, contrasena, recordar } = this.loginForm.getRawValue();
     this.cargando.set(true);
-    this.mensaje.set('');
-    this.auth.iniciarSesion({ usuario: usuario.trim(), contrasena }, recordar).subscribe({
+    this.activandoServidor.set(true);
+    this.tipoMensaje.set('info');
+    this.mensaje.set('Activando el servidor. Esto puede tardar hasta un minuto...');
+    this.auth.activarServidor().pipe(
+      switchMap(() => {
+        this.activandoServidor.set(false);
+        this.mensaje.set('');
+        return this.auth.iniciarSesion({ usuario: usuario.trim(), contrasena }, recordar);
+      }),
+    ).subscribe({
       next: () => {
         this.cargando.set(false);
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {
         this.cargando.set(false);
+        this.activandoServidor.set(false);
         this.tipoMensaje.set('error');
-        this.mensaje.set(error?.error?.mensaje ?? 'No se pudo iniciar sesión. Verifica tus credenciales.');
+        this.mensaje.set(
+          error?.error?.mensaje
+            ?? (error?.name === 'TimeoutError'
+              ? 'El servidor tardó demasiado en responder. Intenta nuevamente en unos segundos.'
+              : 'No se pudo iniciar sesión. Verifica tus credenciales.'),
+        );
       },
     });
   }

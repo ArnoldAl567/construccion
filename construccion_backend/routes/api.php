@@ -5,6 +5,10 @@ use App\Http\Middleware\AutenticarApiToken;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->controller(DatosConstruccionController::class)->group(function (): void {
+    Route::get('/salud', fn () => response()->json([
+        'estado' => 'activo',
+        'servicio' => 'ConstructControl API',
+    ]));
     Route::post('/autenticacion/iniciar-sesion', 'login')->middleware('throttle:5,1');
     Route::post('/autenticacion/registrar', 'registrarUsuario')->middleware('throttle:5,1');
     Route::post('/autenticacion/cerrar-sesion', 'logout');

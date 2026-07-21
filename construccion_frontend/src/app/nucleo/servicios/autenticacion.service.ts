@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { map, Observable, tap } from 'rxjs';
+import { catchError, EMPTY, exhaustMap, map, Observable, take, timeout, timer, tap } from 'rxjs';
 import { API_URL } from '../configuracion/api.config';
 
 interface RespuestaApi<T> {
@@ -80,6 +80,20 @@ export class AutenticacionService {
       }),
       tap((datos) => this.guardarSesion(datos, recordar)),
       map((datos) => this.usuarioDesdeRespuesta(datos)),
+    );
+  }
+
+  activarServidor(): Observable<void> {
+    return timer(0, 3_000).pipe(
+      exhaustMap(() =>
+        this.http.get(`${this.apiUrl}/salud`, { responseType: 'text' }).pipe(
+          timeout(10_000),
+          catchError(() => EMPTY),
+        ),
+      ),
+      take(1),
+      timeout(90_000),
+      map(() => undefined),
     );
   }
 

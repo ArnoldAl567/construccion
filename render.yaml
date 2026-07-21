@@ -1,0 +1,50 @@
+databases:
+  - name: construct-control-db
+    plan: free
+    region: oregon
+    databaseName: construct_control
+    user: construct_control
+
+services:
+  - type: web
+    name: construct-control-api-arnold
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: construccion_backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /up
+    envVars:
+      - key: APP_NAME
+        value: ConstructControl
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: construct-control-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: prefer
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning

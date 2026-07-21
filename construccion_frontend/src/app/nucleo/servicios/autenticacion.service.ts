@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { map, Observable, tap } from 'rxjs';
+import { API_URL } from '../configuracion/api.config';
 
 interface RespuestaApi<T> {
   exito: boolean;
@@ -52,7 +53,7 @@ const SESION_USUARIO_ANTERIOR_KEY = 'construct_control_usuario';
 
 @Injectable({ providedIn: 'root' })
 export class AutenticacionService {
-  private readonly apiUrl = 'http://127.0.0.1:8000/api/v1';
+  private readonly apiUrl = API_URL;
   private readonly sesion = signal<SesionGuardada | null>(this.obtenerSesionGuardada());
   private temporizadorExpiracion: ReturnType<typeof setTimeout> | null = null;
 

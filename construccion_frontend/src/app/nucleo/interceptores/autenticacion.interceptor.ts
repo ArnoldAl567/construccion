@@ -2,9 +2,8 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
+import { API_URL } from '../configuracion/api.config';
 import { AutenticacionService } from '../servicios/autenticacion.service';
-
-const API_URL = 'http://127.0.0.1:8000/api/v1';
 
 export const autenticacionInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AutenticacionService);

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, forkJoin, map, tap } from 'rxjs';
+import { API_URL } from '../configuracion/api.config';
 import {
   AlertaSistema,
   Asistencia,
@@ -45,7 +46,7 @@ interface ResumenDashboard {
 @Injectable({ providedIn: 'root' })
 export class DatosConstruccionService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://127.0.0.1:8000/api/v1';
+  private readonly apiUrl = API_URL;
 
   readonly obras = signal<Obra[]>([]);
   readonly trabajadores = signal<Trabajador[]>([]);

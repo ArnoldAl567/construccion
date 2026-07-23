@@ -341,6 +341,26 @@ class DatosConstruccionController extends Controller
     public function trabajadores(): JsonResponse
     {
         $trabajadores = DB::table('trabajadores')
+            ->leftJoin('planilla_detalles', 'planilla_detalles.trabajador_id', '=', 'trabajadores.id')
+            ->select(
+                'trabajadores.id',
+                'trabajadores.nombres',
+                'trabajadores.apellidos',
+                'trabajadores.dni',
+                'trabajadores.cargo',
+                'trabajadores.sueldo',
+                'trabajadores.estado',
+            )
+            ->selectRaw('COUNT(DISTINCT planilla_detalles.planilla_id) AS apariciones_planillas')
+            ->groupBy(
+                'trabajadores.id',
+                'trabajadores.nombres',
+                'trabajadores.apellidos',
+                'trabajadores.dni',
+                'trabajadores.cargo',
+                'trabajadores.sueldo',
+                'trabajadores.estado',
+            )
             ->orderBy('apellidos')
             ->orderBy('nombres')
             ->get()
@@ -352,6 +372,7 @@ class DatosConstruccionController extends Controller
                 'cargo' => $trabajador->cargo,
                 'sueldo' => (float) $trabajador->sueldo,
                 'estado' => $trabajador->estado,
+                'aparicionesPlanillas' => (int) $trabajador->apariciones_planillas,
             ]);
 
         return $this->ok($trabajadores);

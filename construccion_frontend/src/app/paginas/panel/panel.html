@@ -534,12 +534,17 @@
           </section>
           @if (vista() === 'trabajadores') {
             <section class="filter-bar">
-              <input [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" placeholder="Buscar trabajador..." />
-              <select [value]="filtroCargoTrabajador()" (change)="filtroCargoTrabajador.set($any($event.target).value)">
+              <input [value]="busqueda()" (input)="actualizarBusquedaTrabajador($any($event.target).value)" placeholder="Buscar trabajador..." />
+              <select [value]="ordenTrabajadores()" (change)="actualizarOrdenTrabajadores($any($event.target).value)" aria-label="Ordenar trabajadores">
+                <option value="apariciones">Más apariciones</option>
+                <option value="nombres">Nombres</option>
+                <option value="apellidos">Apellidos</option>
+              </select>
+              <select [value]="filtroCargoTrabajador()" (change)="actualizarFiltroCargoTrabajador($any($event.target).value)">
                 <option value="todos">Todos los cargos</option>
                 @for (cargo of cargosTrabajador(); track cargo.codigo) {<option [value]="cargo.codigo">{{ cargo.nombre }}</option>}
               </select>
-              <select [value]="filtroEstadoTrabajador()" (change)="filtroEstadoTrabajador.set($any($event.target).value)">
+              <select [value]="filtroEstadoTrabajador()" (change)="actualizarFiltroEstadoTrabajador($any($event.target).value)">
                 <option value="todos">Todos los estados</option>
                 @for (estado of estadosTrabajador; track estado.valor) {<option [value]="estado.valor">{{ estado.etiqueta }}</option>}
               </select>
@@ -548,7 +553,7 @@
               <table>
                 <thead><tr><th>Nombres</th><th>Apellidos</th><th>DNI</th><th>Cargo</th><th>Sueldo</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>
-                  @for (trabajador of trabajadoresFiltrados(); track trabajador.id) {
+                  @for (trabajador of trabajadoresPaginados(); track trabajador.id) {
                     <tr>
                       <td><strong>{{ trabajador.nombres }}</strong></td>
                       <td>{{ trabajador.apellidos }}</td>
@@ -570,10 +575,23 @@
                       </td>
                       <td class="actions icon-actions"><button aria-label="Editar trabajador" (click)="editarTrabajador(trabajador)" [innerHTML]="iconoSvg('edit')"></button><button aria-label="Eliminar trabajador" (click)="eliminarTrabajador(trabajador)" [innerHTML]="iconoSvg('trash')"></button></td>
                     </tr>
+                  } @empty {
+                    <tr><td colspan="7" class="empty-row">No hay trabajadores que coincidan con los filtros.</td></tr>
                   }
                 </tbody>
               </table>
-              <footer class="table-footer"><span>Mostrando {{ trabajadoresFiltrados().length }} de {{ datos.trabajadores().length }} trabajadores</span></footer>
+              <footer class="table-footer">
+                <span>Mostrando {{ inicioRangoTrabajadores() }}-{{ finRangoTrabajadores() }} de {{ trabajadoresFiltrados().length }} trabajadores</span>
+                @if (totalPaginasTrabajadores() > 1) {
+                  <nav class="table-pagination" aria-label="Paginacion de trabajadores">
+                    <button type="button" aria-label="Pagina anterior" [disabled]="paginaActualTrabajadores() === 1" (click)="irPaginaTrabajadores(paginaActualTrabajadores() - 1)">‹</button>
+                    @for (pagina of paginasTrabajadores(); track pagina) {
+                      <button type="button" [class.active]="paginaActualTrabajadores() === pagina" [attr.aria-current]="paginaActualTrabajadores() === pagina ? 'page' : null" (click)="irPaginaTrabajadores(pagina)">{{ pagina }}</button>
+                    }
+                    <button type="button" aria-label="Pagina siguiente" [disabled]="paginaActualTrabajadores() === totalPaginasTrabajadores()" (click)="irPaginaTrabajadores(paginaActualTrabajadores() + 1)">›</button>
+                  </nav>
+                }
+              </footer>
             </article>
           } @else if (vista() === 'cargos') {
             <article class="panel table-panel">

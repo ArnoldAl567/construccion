@@ -190,6 +190,9 @@ export class PanelComponent {
   readonly modoVistaObras = signal<'lista' | 'grid'>('lista');
   readonly filtroCargoTrabajador = signal<'todos' | Trabajador['cargo']>('todos');
   readonly filtroEstadoTrabajador = signal<'todos' | Trabajador['estado']>('todos');
+  readonly ordenTrabajadores = signal<'apariciones' | 'nombres' | 'apellidos'>('apariciones');
+  readonly paginaTrabajadores = signal(1);
+  readonly trabajadoresPorPagina = 10;
   readonly trabajadorEditandoId = signal<number | null>(null);
   readonly mantenedorTab = signal<VistaMantenedor>('trabajadores');
   readonly mantenedorMenuAbierto = signal(false);
@@ -558,6 +561,7 @@ export class PanelComponent {
     const termino = this.busqueda().toLowerCase().trim();
     const cargo = this.filtroCargoTrabajador();
     const estado = this.filtroEstadoTrabajador();
+    const orden = this.ordenTrabajadores();
     return this.datos
       .trabajadores()
       .filter((trabajador) =>
@@ -567,8 +571,45 @@ export class PanelComponent {
           .includes(termino),
       )
       .filter((trabajador) => cargo === 'todos' || trabajador.cargo === cargo)
-      .filter((trabajador) => estado === 'todos' || trabajador.estado === estado);
+      .filter((trabajador) => estado === 'todos' || trabajador.estado === estado)
+      .sort((a, b) => {
+        if (orden === 'nombres') {
+          return a.nombres.localeCompare(b.nombres, 'es', { sensitivity: 'base' })
+            || a.apellidos.localeCompare(b.apellidos, 'es', { sensitivity: 'base' });
+        }
+        if (orden === 'apellidos') {
+          return a.apellidos.localeCompare(b.apellidos, 'es', { sensitivity: 'base' })
+            || a.nombres.localeCompare(b.nombres, 'es', { sensitivity: 'base' });
+        }
+        return (b.aparicionesPlanillas ?? 0) - (a.aparicionesPlanillas ?? 0)
+          || a.nombres.localeCompare(b.nombres, 'es', { sensitivity: 'base' })
+          || a.apellidos.localeCompare(b.apellidos, 'es', { sensitivity: 'base' });
+      });
   });
+  readonly totalPaginasTrabajadores = computed(() =>
+    Math.max(1, Math.ceil(this.trabajadoresFiltrados().length / this.trabajadoresPorPagina)),
+  );
+  readonly paginaActualTrabajadores = computed(() =>
+    Math.min(this.paginaTrabajadores(), this.totalPaginasTrabajadores()),
+  );
+  readonly paginasTrabajadores = computed(() =>
+    Array.from({ length: this.totalPaginasTrabajadores() }, (_, indice) => indice + 1),
+  );
+  readonly trabajadoresPaginados = computed(() => {
+    const inicio = (this.paginaActualTrabajadores() - 1) * this.trabajadoresPorPagina;
+    return this.trabajadoresFiltrados().slice(inicio, inicio + this.trabajadoresPorPagina);
+  });
+  readonly inicioRangoTrabajadores = computed(() =>
+    this.trabajadoresFiltrados().length
+      ? (this.paginaActualTrabajadores() - 1) * this.trabajadoresPorPagina + 1
+      : 0,
+  );
+  readonly finRangoTrabajadores = computed(() =>
+    Math.min(
+      this.paginaActualTrabajadores() * this.trabajadoresPorPagina,
+      this.trabajadoresFiltrados().length,
+    ),
+  );
 
   readonly obraSeleccionada = computed(() => this.datos.obras()[0]);
   readonly asistenciaResumen = computed(() => {
@@ -1101,6 +1142,7 @@ export class PanelComponent {
     this.busqueda.set('');
     this.filtroCargoTrabajador.set('todos');
     this.filtroEstadoTrabajador.set('todos');
+    this.paginaTrabajadores.set(1);
     if (this.esVistaMantenedor(vista)) {
       this.mantenedorMenuAbierto.set(true);
       this.mantenedorTab.set(vista);
@@ -1388,6 +1430,31 @@ export class PanelComponent {
   alternarEstadoTrabajador(trabajador: Trabajador): void {
     const nuevoEstado: Trabajador['estado'] = trabajador.estado === 'activo' ? 'inactivo' : 'activo';
     this.cambiarEstadoTrabajador(trabajador, nuevoEstado);
+  }
+
+  actualizarBusquedaTrabajador(valor: string): void {
+    this.busqueda.set(valor);
+    this.paginaTrabajadores.set(1);
+  }
+
+  actualizarFiltroCargoTrabajador(valor: 'todos' | Trabajador['cargo']): void {
+    this.filtroCargoTrabajador.set(valor);
+    this.paginaTrabajadores.set(1);
+  }
+
+  actualizarFiltroEstadoTrabajador(valor: 'todos' | Trabajador['estado']): void {
+    this.filtroEstadoTrabajador.set(valor);
+    this.paginaTrabajadores.set(1);
+  }
+
+  actualizarOrdenTrabajadores(valor: 'apariciones' | 'nombres' | 'apellidos'): void {
+    this.ordenTrabajadores.set(valor);
+    this.paginaTrabajadores.set(1);
+  }
+
+  irPaginaTrabajadores(pagina: number): void {
+    const paginaValida = Math.min(Math.max(1, pagina), this.totalPaginasTrabajadores());
+    this.paginaTrabajadores.set(paginaValida);
   }
 
   alternarEstadoCargo(cargo: Cargo): void {

@@ -37,6 +37,7 @@ export interface Trabajador {
   cargo: string;
   sueldo: number;
   estado: 'activo' | 'inactivo';
+  aparicionesPlanillas?: number;
 }
 
 export interface Cargo {

@@ -1501,6 +1501,26 @@ td small {
   color: #fff;
 }
 
+.table-pagination {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.table-pagination button {
+  cursor: pointer;
+}
+
+.table-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.table-pagination button:focus-visible {
+  outline: 2px solid var(--ui-blue);
+  outline-offset: 2px;
+}
+
 .person-cell {
   display: flex;
   align-items: center;

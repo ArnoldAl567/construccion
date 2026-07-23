@@ -6608,13 +6608,43 @@ app-panel {
     text-overflow: ellipsis;
   }
 
-  .topbar-actions {
+  .topbar-actions,
+  .dark-mode .topbar-actions,
+  .app-frame.dark-mode .topbar-actions {
     display: flex;
-    flex: none;
+    flex: 0 0 69px;
     flex-direction: row;
     align-items: center;
-    width: auto;
+    justify-content: flex-end;
+    width: 69px;
+    min-width: 69px;
     gap: 6px;
+  }
+
+  .theme-toggle,
+  .dark-mode .theme-toggle {
+    flex: 0 0 31px;
+    width: 31px;
+    min-width: 31px;
+    height: 31px;
+    margin: 0;
+  }
+
+  .user-menu,
+  .dark-mode .user-menu,
+  .user-chip,
+  .dark-mode .user-chip {
+    flex: 0 0 32px;
+    width: 32px;
+    min-width: 32px;
+    margin: 0;
+  }
+
+  .user-chip,
+  .dark-mode .user-chip,
+  .user-chip img,
+  .dark-mode .user-chip img {
+    height: 32px;
   }
 
   .topbar-spacer,

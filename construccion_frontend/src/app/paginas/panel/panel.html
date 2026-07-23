@@ -726,6 +726,20 @@
                 }
               </select>
             </label>
+            <div class="payroll-view-switch" role="group" aria-label="Modo de vista de planillas">
+              <button
+                type="button"
+                [class.active]="modoVistaPlanillas() === 'resumen'"
+                [attr.aria-pressed]="modoVistaPlanillas() === 'resumen'"
+                (click)="cambiarModoVistaPlanillas('resumen')"
+              >Resumen</button>
+              <button
+                type="button"
+                [class.active]="modoVistaPlanillas() === 'detalle'"
+                [attr.aria-pressed]="modoVistaPlanillas() === 'detalle'"
+                (click)="cambiarModoVistaPlanillas('detalle')"
+              >Detalle</button>
+            </div>
           </div>
           <section class="kpi-grid payroll-kpis">
             <article class="kpi-card"><strong class="blue-text">{{ planillasResumen().total }}</strong><p>Total planillas</p></article>
@@ -733,6 +747,7 @@
             <article class="kpi-card"><strong class="blue-text">{{ planillasResumen().aprobadas }}</strong><p>Pagadas</p></article>
             <article class="kpi-card"><strong class="green-text">{{ formatoMoneda(planillasResumen().monto) }}</strong><p>Monto total mes</p></article>
           </section>
+          @if (modoVistaPlanillas() === 'resumen') {
           <article class="panel table-panel">
             <header><h2>Registro de planillas{{ obraPlanillasSeleccionada() ? ' - ' + obraPlanillasSeleccionada()!.nombre : '' }}</h2></header>
             <table>
@@ -772,6 +787,75 @@
               </tbody>
             </table>
           </article>
+          } @else {
+            <section class="payroll-expanded-list" aria-label="Detalle de todas las planillas">
+              @for (fila of planillasFiltradas(); track fila.id) {
+                <article class="payroll-expanded-item">
+                  <header class="payroll-expanded-header">
+                    <div class="payroll-expanded-title">
+                      <span>Periodo</span>
+                      <h2>{{ fila.periodo }}</h2>
+                      <p>{{ fila.obra }}{{ fila.fechaInicio && fila.fechaFin ? ' · ' + fila.fechaInicio + ' - ' + fila.fechaFin : '' }}</p>
+                    </div>
+                    <div class="payroll-expanded-controls">
+                      <div class="payroll-expanded-total"><span>Total</span><strong>{{ formatoMoneda(fila.total) }}</strong></div>
+                      <button
+                        type="button"
+                        class="state-toggle payroll-state-toggle"
+                        [class.active]="estadoPlanillaPagada(fila)"
+                        [class.inactive]="!estadoPlanillaPagada(fila)"
+                        [attr.aria-pressed]="estadoPlanillaPagada(fila)"
+                        (click)="alternarEstadoPlanilla(fila)"
+                      >
+                        <span class="state-toggle-track"><span class="state-toggle-thumb"></span></span>
+                        <span>{{ estadoPlanillaEtiqueta(fila) }}</span>
+                      </button>
+                      <div class="actions icon-actions">
+                        <button type="button" aria-label="Ver planilla" (click)="verPlanilla(fila)" [innerHTML]="iconoSvg('eye')"></button>
+                        @if (!estadoPlanillaPagada(fila)) {
+                          <button type="button" aria-label="Editar planilla" (click)="editarPlanilla(fila)" [innerHTML]="iconoSvg('edit')"></button>
+                          <button type="button" aria-label="Eliminar planilla" (click)="eliminarPlanilla(fila)" [innerHTML]="iconoSvg('trash')"></button>
+                        }
+                      </div>
+                    </div>
+                  </header>
+                  @if (detallePlanillaVista(fila.id); as detalle) {
+                    @if (detalle.detalles.length) {
+                      <div class="payroll-expanded-table">
+                        <table>
+                          <thead><tr><th>Trabajador</th><th>Cargo</th><th>Dias</th><th>H. extras</th><th>Sueldo base</th><th>Pago extras</th><th>Subtotal</th></tr></thead>
+                          <tbody>
+                            @for (trabajador of detalle.detalles; track trabajador.trabajadorId) {
+                              <tr>
+                                <td><strong>{{ trabajador.trabajador }}</strong></td>
+                                <td>{{ cargoTrabajadorEtiqueta(trabajador.cargo) }}</td>
+                                <td>{{ trabajador.diasTrabajados }}</td>
+                                <td>{{ trabajador.horasExtras }}</td>
+                                <td class="money">{{ formatoMoneda(trabajador.sueldoBase) }}</td>
+                                <td class="money">{{ formatoMoneda(trabajador.pagoHorasExtras) }}</td>
+                                <td class="money">{{ formatoMoneda(trabajador.subtotal) }}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    } @else {
+                      <p class="payroll-expanded-message">No se registraron trabajadores en esta planilla.</p>
+                    }
+                  } @else if (cargandoDetallesPlanillas()) {
+                    <p class="payroll-expanded-message">Cargando detalle de trabajadores...</p>
+                  } @else {
+                    <div class="payroll-expanded-message payroll-expanded-error">
+                      <span>No se pudo cargar el detalle de esta planilla.</span>
+                      <button type="button" class="text-button" (click)="cambiarModoVistaPlanillas('detalle')">Reintentar</button>
+                    </div>
+                  }
+                </article>
+              } @empty {
+                <article class="payroll-expanded-empty">No hay planillas registradas para esta obra.</article>
+              }
+            </section>
+          }
         } @else if (vista() === 'gastos') {
           <section class="page-heading"><div><h1>Gastos</h1><p>Control de egresos por obra</p></div><button class="primary-button" type="button" (click)="abrirModal('gasto')">+ Registrar gasto</button></section>
           <section class="module-stat-grid six compact-stats">

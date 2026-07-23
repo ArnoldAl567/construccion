@@ -205,6 +205,10 @@ export class PanelComponent {
   readonly planillaDetalle = signal<PlanillaDetalle | null>(null);
   readonly planillaEditandoId = signal<number | null>(null);
   readonly obraPlanillasSeleccionadaId = signal<number | null>(null);
+  readonly modoVistaPlanillas = signal<'resumen' | 'detalle'>('resumen');
+  readonly detallesPlanillasVista = signal<Record<number, PlanillaDetalle>>({});
+  readonly cargandoDetallesPlanillas = signal(false);
+  readonly errorDetallesPlanillas = signal(false);
   readonly obraGastosSeleccionadaId = signal<number | null>(null);
   readonly gastoEditandoId = signal<number | null>(null);
   readonly obraIngresosSeleccionadaId = signal<number | null>(null);
@@ -1774,6 +1778,9 @@ export class PanelComponent {
   seleccionarObraPlanillas(valor: string): void {
     if (!valor) {
       this.obraPlanillasSeleccionadaId.set(null);
+      if (this.modoVistaPlanillas() === 'detalle') {
+        this.cargarDetallesPlanillasVista();
+      }
       return;
     }
     const obraId = Number(valor);
@@ -1781,6 +1788,57 @@ export class PanelComponent {
       return;
     }
     this.obraPlanillasSeleccionadaId.set(obraId);
+    if (this.modoVistaPlanillas() === 'detalle') {
+      this.cargarDetallesPlanillasVista();
+    }
+  }
+
+  cambiarModoVistaPlanillas(modo: 'resumen' | 'detalle'): void {
+    this.modoVistaPlanillas.set(modo);
+    if (modo === 'detalle') {
+      this.cargarDetallesPlanillasVista();
+    }
+  }
+
+  detallePlanillaVista(planillaId: number): PlanillaDetalle | null {
+    return this.detallesPlanillasVista()[planillaId] ?? null;
+  }
+
+  private cargarDetallesPlanillasVista(): void {
+    const planillasPendientes = this.planillasFiltradas()
+      .filter((planilla) => !this.detallesPlanillasVista()[planilla.id]);
+
+    this.errorDetallesPlanillas.set(false);
+    if (!planillasPendientes.length) {
+      this.cargandoDetallesPlanillas.set(false);
+      return;
+    }
+
+    this.cargandoDetallesPlanillas.set(true);
+    forkJoin(planillasPendientes.map((planilla) => this.datos.obtenerPlanilla(planilla.id))).subscribe({
+      next: (detalles) => {
+        this.detallesPlanillasVista.update((actuales) => {
+          const siguientes = { ...actuales };
+          detalles.forEach((detalle) => {
+            siguientes[detalle.planilla.id] = detalle;
+          });
+          return siguientes;
+        });
+        this.cargandoDetallesPlanillas.set(false);
+      },
+      error: () => {
+        this.errorDetallesPlanillas.set(true);
+        this.cargandoDetallesPlanillas.set(false);
+      },
+    });
+  }
+
+  private invalidarDetallePlanilla(planillaId: number): void {
+    this.detallesPlanillasVista.update((actuales) => {
+      const siguientes = { ...actuales };
+      delete siguientes[planillaId];
+      return siguientes;
+    });
   }
 
   seleccionarObraGastos(valor: string): void {
@@ -1899,10 +1957,12 @@ export class PanelComponent {
 
     const planillaId = this.planillaEditandoId();
     if (planillaId) {
+      this.invalidarDetallePlanilla(planillaId);
       this.datos.actualizarPlanilla(planillaId, datosPlanilla);
     } else {
       this.datos.registrarPlanilla(datosPlanilla);
     }
+    this.modoVistaPlanillas.set('resumen');
     this.cerrarModal();
     this.vista.set('planillas');
     this.mostrarMensaje(planillaId ? 'Planilla actualizada correctamente.' : 'Planilla semanal generada correctamente.');
@@ -1954,7 +2014,9 @@ export class PanelComponent {
       detalle: `${planilla.obra} - ${this.formatoMoneda(planilla.total)}`,
       advertencia: 'Esta accion eliminara la planilla pendiente y su detalle de trabajadores.',
       accion: () => {
+        this.invalidarDetallePlanilla(planilla.id);
         this.datos.eliminarPlanilla(planilla.id);
+        this.modoVistaPlanillas.set('resumen');
         this.cerrarModal();
         this.mostrarMensaje('Planilla eliminada correctamente.');
       },

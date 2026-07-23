@@ -1793,6 +1793,24 @@ select.ng-invalid.ng-touched {
   color: #fb7185;
 }
 
+input.period-conflict {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.payroll-period-warning {
+  margin: -4px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  background: #fff1f2;
+}
+
+.dark-mode .payroll-period-warning {
+  border-color: rgba(251, 113, 133, 0.5);
+  background: rgba(127, 29, 29, 0.18);
+}
+
 .span-2,
 .form-grid footer {
   grid-column: 1 / -1;

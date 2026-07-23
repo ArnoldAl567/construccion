@@ -903,7 +903,7 @@ class DatosConstruccionController extends Controller
             return $this->error('Solo se pueden editar planillas pendientes.', 422);
         }
 
-        $calculada = $this->calcularPlanillaDesdeRequest($request);
+        $calculada = $this->calcularPlanillaDesdeRequest($request, $id);
         if ($calculada instanceof JsonResponse) {
             return $calculada;
         }
@@ -1282,7 +1282,7 @@ class DatosConstruccionController extends Controller
         return $codigo !== '' ? $codigo : 'cargo_'.Str::lower(Str::random(6));
     }
 
-    private function calcularPlanillaDesdeRequest(Request $request): array|JsonResponse
+    private function calcularPlanillaDesdeRequest(Request $request, ?int $planillaIgnoradaId = null): array|JsonResponse
     {
         $datos = $request->validate([
             'obraId' => ['required', 'exists:obras,id'],
@@ -1296,6 +1296,20 @@ class DatosConstruccionController extends Controller
 
         $inicio = Carbon::parse($datos['fechaInicio'])->startOfDay();
         $fin = Carbon::parse($datos['fechaFin'])->startOfDay();
+        $planillaEnConflicto = DB::table('planillas')
+            ->where('obra_id', $datos['obraId'])
+            ->whereDate('fecha_inicio', '<=', $fin->toDateString())
+            ->whereDate('fecha_fin', '>=', $inicio->toDateString())
+            ->when($planillaIgnoradaId, fn ($consulta) => $consulta->where('id', '<>', $planillaIgnoradaId))
+            ->orderBy('fecha_inicio')
+            ->first(['periodo']);
+
+        if ($planillaEnConflicto) {
+            return $this->error(
+                "El rango seleccionado ya fue utilizado en la planilla {$planillaEnConflicto->periodo}. Selecciona otras fechas.",
+                422,
+            );
+        }
 
         foreach ($datos['detalles'] as $detalle) {
             if ((float) $detalle['diasTrabajados'] <= 0 && (float) ($detalle['horasExtras'] ?? 0) <= 0) {

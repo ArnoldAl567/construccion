@@ -205,6 +205,7 @@ export class PanelComponent {
   readonly diasPlanilla = signal<Record<number, number>>({});
   readonly horasExtrasPlanilla = signal<Record<number, number>>({});
   readonly planillaRangoVersion = signal(0);
+  readonly errorPeriodoPlanilla = signal('');
   readonly planillaDetalle = signal<PlanillaDetalle | null>(null);
   readonly planillaEditandoId = signal<number | null>(null);
   readonly obraPlanillasSeleccionadaId = signal<number | null>(null);
@@ -1040,6 +1041,34 @@ export class PanelComponent {
     const { fechaInicio, fechaFin } = this.planillaForm.getRawValue();
     return this.diasEntreFechas(fechaInicio, fechaFin);
   });
+  readonly advertenciaPeriodoPlanilla = computed(() => {
+    this.planillaRangoVersion();
+    const errorServidor = this.errorPeriodoPlanilla();
+    if (errorServidor) {
+      return errorServidor;
+    }
+
+    const { obraId, fechaInicio, fechaFin } = this.planillaForm.getRawValue();
+    if (!obraId || !fechaInicio || !fechaFin || fechaFin < fechaInicio) {
+      return '';
+    }
+
+    const planillaEditandoId = this.planillaEditandoId();
+    const conflicto = this.datos.planillas().find((planilla) => {
+      const inicioExistente = (planilla.fechaInicio ?? '').slice(0, 10);
+      const finExistente = (planilla.fechaFin ?? '').slice(0, 10);
+      return planilla.obraId === Number(obraId)
+        && planilla.id !== planillaEditandoId
+        && inicioExistente !== ''
+        && finExistente !== ''
+        && inicioExistente <= fechaFin
+        && finExistente >= fechaInicio;
+    });
+
+    return conflicto
+      ? `El rango seleccionado ya fue utilizado en ${conflicto.periodo}. Selecciona otras fechas.`
+      : '';
+  });
   readonly totalPlanillaPreview = computed(() =>
     this.trabajadoresPlanilla().reduce((total, trabajador) => {
       const dias = this.diasPlanilla()[trabajador.id] ?? 0;
@@ -1237,6 +1266,7 @@ export class PanelComponent {
     this.categoriaGastoEditandoId.set(null);
     this.tipoIngresoEditandoId.set(null);
     this.planillaEditandoId.set(null);
+    this.errorPeriodoPlanilla.set('');
     this.gastoEditandoId.set(null);
     this.ingresoEditandoId.set(null);
   }
@@ -1949,6 +1979,7 @@ export class PanelComponent {
   }
 
   actualizarRangoPlanilla(): void {
+    this.errorPeriodoPlanilla.set('');
     this.diasPlanilla.update((dias) => {
       const ajustado: Record<number, number> = {};
       for (const [trabajadorId, valor] of Object.entries(dias)) {
@@ -1995,6 +2026,14 @@ export class PanelComponent {
       return;
     }
 
+    const advertenciaPeriodo = this.advertenciaPeriodoPlanilla();
+    if (advertenciaPeriodo) {
+      this.planillaForm.controls.fechaInicio.markAsTouched();
+      this.planillaForm.controls.fechaFin.markAsTouched();
+      this.mostrarMensaje(advertenciaPeriodo);
+      return;
+    }
+
     if (this.diasMaximosPlanilla() <= 0) {
       this.mostrarMensaje('La fecha fin debe ser igual o posterior a la fecha de inicio.');
       return;
@@ -2023,16 +2062,29 @@ export class PanelComponent {
     this.obraPlanillasSeleccionadaId.set(datosPlanilla.obraId);
 
     const planillaId = this.planillaEditandoId();
-    if (planillaId) {
-      this.invalidarDetallePlanilla(planillaId);
-      this.datos.actualizarPlanilla(planillaId, datosPlanilla);
-    } else {
-      this.datos.registrarPlanilla(datosPlanilla);
-    }
-    this.modoVistaPlanillas.set('resumen');
-    this.cerrarModal();
-    this.vista.set('planillas');
-    this.mostrarMensaje(planillaId ? 'Planilla actualizada correctamente.' : 'Planilla semanal generada correctamente.');
+    const solicitud = planillaId
+      ? this.datos.actualizarPlanilla(planillaId, datosPlanilla)
+      : this.datos.registrarPlanilla(datosPlanilla);
+
+    solicitud.subscribe({
+      next: (mensaje) => {
+        if (planillaId) {
+          this.invalidarDetallePlanilla(planillaId);
+        }
+        this.modoVistaPlanillas.set('resumen');
+        this.cerrarModal();
+        this.vista.set('planillas');
+        this.mostrarMensaje(mensaje);
+      },
+      error: (error) => {
+        const mensaje = error.error?.mensaje ?? 'No se pudo guardar la planilla.';
+        if (mensaje.toLowerCase().includes('rango seleccionado')) {
+          this.errorPeriodoPlanilla.set(mensaje);
+          this.planillaRangoVersion.update((valor) => valor + 1);
+        }
+        this.mostrarMensaje(mensaje);
+      },
+    });
   }
 
   verPlanilla(planilla: Planilla): void {
@@ -2054,6 +2106,7 @@ export class PanelComponent {
     this.datos.obtenerPlanilla(planilla.id).subscribe({
       next: (detalle) => {
         this.planillaEditandoId.set(planilla.id);
+        this.errorPeriodoPlanilla.set('');
         this.planillaForm.reset({
           obraId: detalle.planilla.obraId,
           fechaInicio: detalle.planilla.fechaInicio ?? '',
@@ -2885,6 +2938,7 @@ export class PanelComponent {
     fin.setDate(inicio.getDate() + 5);
     const obraSeleccionada = this.obraPlanillasSeleccionada() ?? this.datos.obras()[0];
 
+    this.errorPeriodoPlanilla.set('');
     this.planillaForm.reset({
       obraId: obraSeleccionada?.id ?? 1,
       fechaInicio: this.fechaIso(inicio),

@@ -1292,13 +1292,16 @@
             <h2>{{ planillaEditandoId() ? 'Editar planilla semanal' : 'Generar planilla semanal' }}</h2>
             <form [formGroup]="planillaForm" (ngSubmit)="guardarPlanilla()" class="form-grid payroll-form">
               <label>Obra
-                <select formControlName="obraId">
+                <select formControlName="obraId" (change)="actualizarRangoPlanilla()">
                   @for (obra of datos.obras(); track obra.id) {<option [value]="obra.id">{{ obra.nombre }}</option>}
                 </select>
                 <small class="field-warning">{{ advertenciaCampo(planillaForm, 'obraId', 'select') }}</small>
               </label>
-              <label>Fecha de inicio<input type="date" formControlName="fechaInicio" (change)="actualizarRangoPlanilla()" /><small class="field-warning">{{ advertenciaCampo(planillaForm, 'fechaInicio') }}</small></label>
-              <label>Fecha fin<input type="date" formControlName="fechaFin" (change)="actualizarRangoPlanilla()" /><small class="field-warning">{{ advertenciaCampo(planillaForm, 'fechaFin') }}</small></label>
+              <label>Fecha de inicio<input type="date" formControlName="fechaInicio" [class.period-conflict]="!!advertenciaPeriodoPlanilla()" [attr.aria-invalid]="!!advertenciaPeriodoPlanilla()" (change)="actualizarRangoPlanilla()" /><small class="field-warning">{{ advertenciaCampo(planillaForm, 'fechaInicio') }}</small></label>
+              <label>Fecha fin<input type="date" formControlName="fechaFin" [class.period-conflict]="!!advertenciaPeriodoPlanilla()" [attr.aria-invalid]="!!advertenciaPeriodoPlanilla()" (change)="actualizarRangoPlanilla()" /><small class="field-warning">{{ advertenciaCampo(planillaForm, 'fechaFin') }}</small></label>
+              @if (advertenciaPeriodoPlanilla()) {
+                <small class="field-warning payroll-period-warning span-2" role="alert">{{ advertenciaPeriodoPlanilla() }}</small>
+              }
               <section class="payroll-summary span-2">
                 <article><span>Días del período</span><strong>{{ diasMaximosPlanilla() }}</strong></article>
                 <article><span>Trabajadores incluidos</span><strong>{{ trabajadoresIncluidosPlanilla() }}</strong></article>
@@ -1327,7 +1330,7 @@
                   </table>
                 </div>
               </section>
-              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button">{{ planillaEditandoId() ? 'Actualizar planilla' : 'Guardar planilla' }}</button></footer>
+              <footer><button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button><button class="primary-button" [disabled]="!!advertenciaPeriodoPlanilla()">{{ planillaEditandoId() ? 'Actualizar planilla' : 'Guardar planilla' }}</button></footer>
             </form>
           } @else if (modalActivo() === 'planilla-detalle' && planillaDetalle()) {
             <h2>Detalle de planilla</h2>

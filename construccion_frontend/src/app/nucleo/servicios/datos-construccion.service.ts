@@ -284,12 +284,18 @@ export class DatosConstruccionService {
     });
   }
 
-  registrarPlanilla(datos: NuevaPlanilla): void {
-    this.http.post<RespuestaApi<null>>(`${this.apiUrl}/planillas`, datos).subscribe(() => this.cargarDatos());
+  registrarPlanilla(datos: NuevaPlanilla): Observable<string> {
+    return this.http.post<RespuestaApi<null>>(`${this.apiUrl}/planillas`, datos).pipe(
+      tap(() => this.cargarDatos()),
+      map((respuesta) => respuesta.mensaje),
+    );
   }
 
-  actualizarPlanilla(id: number, datos: NuevaPlanilla): void {
-    this.http.put<RespuestaApi<null>>(`${this.apiUrl}/planillas/${id}`, datos).subscribe(() => this.cargarDatos());
+  actualizarPlanilla(id: number, datos: NuevaPlanilla): Observable<string> {
+    return this.http.put<RespuestaApi<null>>(`${this.apiUrl}/planillas/${id}`, datos).pipe(
+      tap(() => this.cargarDatos()),
+      map((respuesta) => respuesta.mensaje),
+    );
   }
 
   obtenerPlanilla(id: number): Observable<PlanillaDetalle> {
